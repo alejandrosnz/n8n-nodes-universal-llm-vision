@@ -163,9 +163,15 @@ export function getHeaders(provider: ProviderType | string, apiKey: string, cust
   const config = getProvider(provider);
   const headers = config.headers(apiKey);
 
-  // Add custom headers
+  // Add custom headers but don't allow them to override authentication headers
   if (customHeaders) {
-    Object.assign(headers, customHeaders);
+    for (const [key, value] of Object.entries(customHeaders)) {
+      // Prevent overriding authentication headers
+      const lowerKey = key.toLowerCase();
+      if (lowerKey !== 'authorization' && lowerKey !== 'x-api-key' && value) {
+        headers[key] = value;
+      }
+    }
   }
 
   return headers;
