@@ -62,6 +62,19 @@ Set up your API credentials:
 - **API Key**: Your provider's API key
 - **Base URL**: Custom API endpoint (optional, defaults provided)
 
+#### Custom Provider Configuration
+
+To use a custom OpenAI-compatible LLM vision API:
+
+- Select "Custom Provider" and provide your API Key
+- Set the Base URL (e.g., `https://your-api.com/v1`)
+
+**Requirements**: API must support `/chat/completions` with OpenAI-style requests/responses and Bearer auth.
+
+**Example**: Set Base URL to `https://my-vision-api.com/v1` and ensure vision support.
+
+**Troubleshooting**: Check API key and endpoint for auth issues; verify OpenAI compatibility for format errors.
+
 #### Node Parameters
 
 - **Model**: Model identifier (e.g., gpt-4o)
