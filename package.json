@@ -1,7 +1,7 @@
 {
-  "name": "n8n-nodes-generic-llm-vision",
+  "name": "n8n-nodes-universal-llm-vision",
   "version": "0.1.0",
-  "description": "n8n node for Generic LLM Vision",
+  "description": "n8n node for Universal LLM Vision",
   "keywords": [
     "n8n-community-node-package",
     "vision",
@@ -9,14 +9,14 @@
     "image-analysis"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/alejandrosnz/n8n-nodes-generic-llm-vision",
+  "homepage": "https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision",
   "author": {
     "name": "Alejandro Sanz",
     "email": "your-email@example.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alejandrosnz/n8n-nodes-generic-llm-vision.git"
+    "url": "git+https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision.git"
   },
   "publishConfig": {
     "access": "public"
@@ -43,10 +43,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/GenericLlmVisionApi.credentials.js"
+      "dist/credentials/UniversalLlmVisionApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/GenericLlmVision/GenericLlmVision.node.js"
+      "dist/nodes/UniversalLlmVision/UniversalLlmVision.node.js"
     ]
   },
   "devDependencies": {

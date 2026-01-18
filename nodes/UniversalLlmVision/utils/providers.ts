@@ -10,6 +10,7 @@ export interface ProviderConfig {
   displayName: string;
   baseUrl: string;
   apiEndpoint: string;
+  // eslint-disable-next-line no-unused-vars
   headers: (apiKey: string) => Record<string, string>;
   requestFormat: 'openai' | 'anthropic';
   responseFormat: 'openai' | 'anthropic';
@@ -29,7 +30,7 @@ export const PROVIDERS: Record<ProviderType, ProviderConfig> = {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'https://n8n.io',
-      'X-Title': 'n8n-generic-llm-vision',
+      'X-Title': 'n8n-universal-llm-vision',
     }),
     requestFormat: 'openai',
     responseFormat: 'openai',

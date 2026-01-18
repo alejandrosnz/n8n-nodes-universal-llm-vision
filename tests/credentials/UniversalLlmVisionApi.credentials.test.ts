@@ -1,16 +1,16 @@
-import { GenericLlmVisionApi } from 'credentials/GenericLlmVisionApi.credentials';
+import { UniversalLlmVisionApi } from '../../credentials/UniversalLlmVisionApi.credentials';
 
-describe('GenericLlmVisionApi Credentials', () => {
-  let credentials: GenericLlmVisionApi;
+describe('UniversalLlmVisionApi Credentials', () => {
+  let credentials: UniversalLlmVisionApi;
 
   beforeEach(() => {
-    credentials = new GenericLlmVisionApi();
+    credentials = new UniversalLlmVisionApi();
   });
 
   it('should be defined', () => {
     expect(credentials).toBeDefined();
-    expect(credentials.name).toBe('genericLlmVisionApi');
-    expect(credentials.displayName).toBe('Generic LLM Vision API');
+    expect(credentials.name).toBe('universalLlmVisionApi');
+    expect(credentials.displayName).toBe('Universal LLM Vision API');
   });
 
   it('should have correct properties', () => {

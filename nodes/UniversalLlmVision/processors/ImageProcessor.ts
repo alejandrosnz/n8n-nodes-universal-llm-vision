@@ -52,6 +52,7 @@ export function detectMimeTypeFromExtension(filename: string): string | null {
   const ext = filename.toLowerCase().split('.').pop();
   if (!ext) return null;
 
+  // eslint-disable-next-line no-unused-vars
   for (const [_, mimeConfig] of Object.entries(SUPPORTED_MIME_TYPES)) {
     const extensions = mimeConfig.extension.split('|');
     if (extensions.includes(ext)) {
@@ -73,6 +74,7 @@ export function detectMimeTypeFromBase64(base64Data: string): string | null {
     const buffer = Buffer.from(base64Data, 'base64');
 
     // Check magic bytes for each MIME type
+    // eslint-disable-next-line no-unused-vars
     for (const [_, mimeConfig] of Object.entries(SUPPORTED_MIME_TYPES)) {
       const magicBytes = mimeConfig.magicBytes;
       let match = true;
@@ -88,7 +90,7 @@ export function detectMimeTypeFromBase64(base64Data: string): string | null {
         return mimeConfig.mimeType;
       }
     }
-  } catch (error) {
+  } catch {
     // Invalid base64 data
     return null;
   }

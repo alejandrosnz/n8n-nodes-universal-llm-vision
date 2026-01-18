@@ -5,9 +5,9 @@ import type {
   INodeProperties,
 } from 'n8n-workflow';
 
-export class GenericLlmVisionApi implements ICredentialType {
-  name = 'genericLlmVisionApi';
-  displayName = 'Generic LLM Vision API';
+export class UniversalLlmVisionApi implements ICredentialType {
+  name = 'universalLlmVisionApi';
+  displayName = 'Universal LLM Vision API';
 
   properties: INodeProperties[] = [
     {

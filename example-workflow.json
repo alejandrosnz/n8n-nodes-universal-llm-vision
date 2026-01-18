@@ -70,18 +70,18 @@
         "modelParameters": {},
         "advancedOptions": {}
       },
-      "type": "CUSTOM.genericLlmVision",
+      "type": "CUSTOM.universalLlmVision",
       "typeVersion": 1,
       "position": [
         448,
         -16
       ],
       "id": "58c19ba4-f880-4b46-960e-57a71cbd6486",
-      "name": "Generic LLM Vision (URL)",
+      "name": "Universal LLM Vision (URL)",
       "credentials": {
-        "genericLlmVisionApi": {
+        "universalLlmVisionApi": {
           "id": "I8oGRkKW1GlKbhWT",
-          "name": "Generic LLM Vision - openrouter"
+          "name": "Universal LLM Vision - openrouter"
         }
       }
     },
@@ -91,18 +91,18 @@
         "modelParameters": {},
         "advancedOptions": {}
       },
-      "type": "CUSTOM.genericLlmVision",
+      "type": "CUSTOM.universalLlmVision",
       "typeVersion": 1,
       "position": [
         672,
         80
       ],
       "id": "7bb41bbe-1546-439b-bf9b-9811163dc9e0",
-      "name": "Generic LLM Vision (BINARY)",
+      "name": "Universal LLM Vision (BINARY)",
       "credentials": {
-        "genericLlmVisionApi": {
+        "universalLlmVisionApi": {
           "id": "I8oGRkKW1GlKbhWT",
-          "name": "Generic LLM Vision - openrouter"
+          "name": "Universal LLM Vision - openrouter"
         }
       }
     },
@@ -114,18 +114,18 @@
         "modelParameters": {},
         "advancedOptions": {}
       },
-      "type": "CUSTOM.genericLlmVision",
+      "type": "CUSTOM.universalLlmVision",
       "typeVersion": 1,
       "position": [
         896,
         272
       ],
       "id": "d9e84ea5-12ce-4fec-b8de-6d06461e91db",
-      "name": "Generic LLM Vision (BASE 64)",
+      "name": "Universal LLM Vision (BASE 64)",
       "credentials": {
-        "genericLlmVisionApi": {
+        "universalLlmVisionApi": {
           "id": "I8oGRkKW1GlKbhWT",
-          "name": "Generic LLM Vision - openrouter"
+          "name": "Universal LLM Vision - openrouter"
         }
       }
     }
@@ -147,7 +147,7 @@
       "main": [
         [
           {
-            "node": "Generic LLM Vision (BINARY)",
+            "node": "Universal LLM Vision (BINARY)",
             "type": "main",
             "index": 0
           },
@@ -168,7 +168,7 @@
             "index": 0
           },
           {
-            "node": "Generic LLM Vision (URL)",
+            "node": "Universal LLM Vision (URL)",
             "type": "main",
             "index": 0
           }
@@ -179,7 +179,7 @@
       "main": [
         [
           {
-            "node": "Generic LLM Vision (BASE 64)",
+            "node": "Universal LLM Vision (BASE 64)",
             "type": "main",
             "index": 0
           }

@@ -9,23 +9,23 @@ import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
 import { getMimeTypeOptions } from './processors/ImageProcessor';
 
-export class GenericLlmVision implements INodeType {
+export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Generic LLM Vision',
-    name: 'genericLlmVision',
+    displayName: 'Universal LLM Vision',
+    name: 'universalLlmVision',
     icon: 'file:vision.svg',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["model"] + " - " + $parameter["imageSource"]}}',
     description: 'Analyze images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic)',
     defaults: {
-      name: 'Generic LLM Vision',
+      name: 'Universal LLM Vision',
     },
     inputs: ['main'],
     outputs: ['main'],
     credentials: [
       {
-        name: 'genericLlmVisionApi',
+        name: 'universalLlmVisionApi',
         required: true,
       },
     ],
@@ -279,17 +279,18 @@ export class GenericLlmVision implements INodeType {
   };
 
   /**
-   * Execute the Generic LLM Vision node
+   * Execute the Universal LLM Vision node
    * Processes images through various LLM vision providers (OpenAI, Anthropic, Groq, etc.)
    * @param this - The execution context provided by n8n
    * @returns Promise<INodeExecutionData[][]> - Array of processed items with analysis results
    */
+  // eslint-disable-next-line no-unused-vars
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
     // Detect which credential is being used and get the appropriate one
-    // First try OpenRouter credential, then fall back to generic credential
+    // First try OpenRouter credential, then fall back to universal credential
     let credentials: any;
     let credentialName: string;
     let apiKey: string;
@@ -302,9 +303,9 @@ export class GenericLlmVision implements INodeType {
       provider = 'openrouter';
       apiKey = credentials.apiKey as string;
     } catch {
-      // OpenRouter credential not configured, try generic credential
-      credentials = await this.getCredentials('genericLlmVisionApi');
-      credentialName = 'genericLlmVisionApi';
+      // OpenRouter credential not configured, try universal credential
+      credentials = await this.getCredentials('universalLlmVisionApi');
+      credentialName = 'universalLlmVisionApi';
       provider = (credentials.provider as string) || 'openai';
       apiKey = credentials.apiKey as string;
       customBaseUrl = (credentials.baseUrl as string) || undefined;

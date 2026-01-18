@@ -1,6 +1,6 @@
-import { GenericLlmVision } from '../../../nodes/GenericLlmVision/GenericLlmVision.node';
-import { ImageProcessor } from '../../../nodes/GenericLlmVision/processors/ImageProcessor';
-import { ResponseProcessor } from '../../../nodes/GenericLlmVision/processors/ResponseProcessor';
+import { UniversalLlmVision } from '../../../nodes/UniversalLlmVision/UniversalLlmVision.node';
+import { ImageProcessor } from '../../../nodes/UniversalLlmVision/processors/ImageProcessor';
+import { ResponseProcessor } from '../../../nodes/UniversalLlmVision/processors/ResponseProcessor';
 import {
   detectMimeTypeFromExtension,
   detectMimeTypeFromBase64,
@@ -8,21 +8,21 @@ import {
   isValidBase64,
   getSupportedMimeTypes,
   prepareImage,
-} from '../../../nodes/GenericLlmVision/processors/ImageProcessor';
-import { getProvider, getHeaders, getProviderOptions } from '../../../nodes/GenericLlmVision/utils/providers';
-import { buildRequest, extractAnalysis, extractMetadata, getHeadersWithAuth } from '../../../nodes/GenericLlmVision/utils/GenericFunctions';
+} from '../../../nodes/UniversalLlmVision/processors/ImageProcessor';
+import { getProvider, getHeaders, getProviderOptions } from '../../../nodes/UniversalLlmVision/utils/providers';
+import { buildRequest, extractAnalysis, extractMetadata, getHeadersWithAuth } from '../../../nodes/UniversalLlmVision/utils/GenericFunctions';
 
-describe('GenericLlmVision Node', () => {
-  let node: GenericLlmVision;
+describe('UniversalLlmVision Node', () => {
+  let node: UniversalLlmVision;
 
   beforeEach(() => {
-    node = new GenericLlmVision();
+    node = new UniversalLlmVision();
   });
 
   it('should be defined with correct metadata', () => {
     expect(node).toBeDefined();
-    expect(node.description.displayName).toBe('Generic LLM Vision');
-    expect(node.description.name).toBe('genericLlmVision');
+    expect(node.description.displayName).toBe('Universal LLM Vision');
+    expect(node.description.name).toBe('universalLlmVision');
     expect(node.description.version).toBe(1);
   });
 
@@ -870,7 +870,7 @@ describe('Integration Tests - Execute Method', () => {
     };
     mockExecuteFunctions.helpers.request.mockResolvedValue(mockApiResponse);
 
-    const node = new GenericLlmVision();
+    const node = new UniversalLlmVision();
     const result = await node.execute.call(mockExecuteFunctions);
 
     expect(result).toHaveLength(1);
@@ -925,7 +925,7 @@ describe('Integration Tests - Execute Method', () => {
     // Mock API error
     mockExecuteFunctions.helpers.request.mockRejectedValue(new Error('API rate limit exceeded'));
 
-    const node = new GenericLlmVision();
+    const node = new UniversalLlmVision();
     const result = await node.execute.call(mockExecuteFunctions);
 
     expect(result).toHaveLength(1);
@@ -977,7 +977,7 @@ describe('Integration Tests - Execute Method', () => {
     // Mock API error
     mockExecuteFunctions.helpers.request.mockRejectedValue(new Error('API rate limit exceeded'));
 
-    const node = new GenericLlmVision();
+    const node = new UniversalLlmVision();
     await expect(node.execute.call(mockExecuteFunctions)).rejects.toThrow('API rate limit exceeded');
   });
 
@@ -1029,7 +1029,7 @@ describe('Integration Tests - Execute Method', () => {
     };
     mockExecuteFunctions.helpers.request.mockResolvedValue(mockApiResponse);
 
-    const node = new GenericLlmVision();
+    const node = new UniversalLlmVision();
     const result = await node.execute.call(mockExecuteFunctions);
 
     expect(result).toHaveLength(1);
@@ -1088,7 +1088,7 @@ describe('Integration Tests - Execute Method', () => {
     };
     mockExecuteFunctions.helpers.request.mockResolvedValue(mockApiResponse);
 
-    const node = new GenericLlmVision();
+    const node = new UniversalLlmVision();
     const result = await node.execute.call(mockExecuteFunctions);
 
     expect(result).toHaveLength(1);
@@ -1098,8 +1098,8 @@ describe('Integration Tests - Execute Method', () => {
       analysis: 'A beautiful landscape'
     });
 
-    // Verify getCredentials was called twice: first for openRouterApi (rejected), then for genericLlmVisionApi (resolved)
+    // Verify getCredentials was called twice: first for openRouterApi (rejected), then for universalLlmVisionApi (resolved)
     expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('openRouterApi');
-    expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('genericLlmVisionApi');
+    expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('universalLlmVisionApi');
   });
 });

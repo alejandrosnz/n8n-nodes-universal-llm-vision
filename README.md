@@ -1,13 +1,15 @@
-# n8n-nodes-generic-llm-vision
+# n8n-nodes-universal-llm-vision
 
 A comprehensive n8n community node for analyzing images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic).
+
+![Sample usage in a workflow](docs/img/sample_usage.png)
 
 ## Installation
 
 Install via npm:
 
 ```bash
-npm install n8n-nodes-generic-llm-vision
+npm install n8n-nodes-universal-llm-vision
 ```
 
 Or install via n8n's community node interface.
@@ -26,7 +28,7 @@ Or install via n8n's community node interface.
 
 ### Basic Setup
 
-1. Add the "Generic LLM Vision" node to your n8n workflow
+1. Add the "Universal LLM Vision" node to your n8n workflow
 2. Configure your API credentials for the chosen provider
 3. Select image source and analysis parameters
 
@@ -68,13 +70,13 @@ Set up your API credentials:
 ### Analyze Image from Binary Data
 
 1. Use a "Download" node to fetch an image
-2. Connect to "Generic LLM Vision" node
+2. Connect to "Universal LLM Vision" node
 3. Set Image Source to "Binary Data"
 4. Configure prompt: "Describe this image in detail"
 
 ### Analyze Image from URL
 
-1. Add "Generic LLM Vision" node
+1. Add "Universal LLM Vision" node
 2. Set Image Source to "URL"
 3. Provide image URL
 4. Use prompt: "Extract all text from this image (OCR)"
