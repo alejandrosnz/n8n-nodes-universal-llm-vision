@@ -87,6 +87,8 @@ To use a custom OpenAI-compatible LLM vision API:
 
 ## Examples
 
+See the [example workflow](example-workflow.json) for a complete setup.
+
 ![Sample analysis result](docs/img/sample_analysis.png)
 
 ### Analyze Image from Binary Data

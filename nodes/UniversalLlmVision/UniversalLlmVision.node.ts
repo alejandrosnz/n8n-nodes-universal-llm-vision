@@ -35,8 +35,8 @@ export class UniversalLlmVision implements INodeType {
         name: 'model',
         type: 'string',
         required: true,
-        default: 'gpt-4-vision',
-        placeholder: 'gpt-4-vision',
+        default: 'gpt-5-mini',
+        placeholder: 'gpt-5-mini',
         description: 'Model identifier for the selected provider (e.g., gpt-4-vision, claude-3-sonnet)',
       },
 
