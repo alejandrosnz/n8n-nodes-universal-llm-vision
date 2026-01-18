@@ -352,7 +352,6 @@ describe('Request Building', () => {
       const request = buildRequest(options);
 
       expect(request.url).toContain('/chat/completions');
-      expect(request.headers['Authorization']).toBe('Bearer ');
       expect(request.body.model).toBe('gpt-4-vision');
       expect(request.body.temperature).toBe(0.7);
       expect(request.body.max_tokens).toBe(512);
@@ -400,7 +399,6 @@ describe('Request Building', () => {
       const request = buildRequest(options);
 
       expect(request.url).toContain('/messages');
-      expect(request.headers['x-api-key']).toBe('');
       expect(request.body.model).toBe('claude-3-sonnet');
       expect(Array.isArray(request.body.messages)).toBe(true);
       expect(request.body.messages[0].content).toBeDefined();
@@ -1109,9 +1107,66 @@ describe('Integration Tests - Execute Method', () => {
       id: 1,
       analysis: 'A beautiful landscape'
     });
-
     // Verify getCredentials was called twice: first for openRouterApi (rejected), then for universalLlmVisionApi (resolved)
     expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('openRouterApi');
     expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('universalLlmVisionApi');
   });
 });
+
+describe('Authentication header protection', () => {
+  it('should not allow customHeaders to override Authorization header', () => {
+    const { getHeaders } = require('../../../nodes/UniversalLlmVision/utils/providers');
+    
+    const apiKey = 'test-api-key-123';
+    const customHeaders = {
+      'Authorization': 'Bearer wrong-key',
+      'X-Custom-Header': 'custom-value',
+    };
+
+    const headers = getHeaders('openrouter', apiKey, customHeaders);
+
+    // Authorization should be the correct one, not overridden
+    expect(headers['Authorization']).toBe(`Bearer ${apiKey}`);
+    // Custom header should be preserved
+    expect(headers['X-Custom-Header']).toBe('custom-value');
+  });
+
+  it('should not allow customHeaders to override x-api-key header for Anthropic', () => {
+    const { getHeaders } = require('../../../nodes/UniversalLlmVision/utils/providers');
+    
+    const apiKey = 'test-api-key-456';
+    const customHeaders = {
+      'x-api-key': 'wrong-key',
+      'X-Custom-Header': 'custom-value',
+    };
+
+    const headers = getHeaders('anthropic', apiKey, customHeaders);
+
+    // x-api-key should be the correct one, not overridden
+    expect(headers['x-api-key']).toBe(apiKey);
+    // Custom header should be preserved
+    expect(headers['X-Custom-Header']).toBe('custom-value');
+  });
+
+  it('should preserve authentication when custom headers are provided with binary filename', () => {
+    const { getHeaders } = require('../../../nodes/UniversalLlmVision/utils/providers');
+    
+    // Simulate the scenario from the bug report: OpenRouter with custom headers
+    const apiKey = 'openrouter-api-key';
+    const customHeadersRecord = {
+      'HTTP-Referer': 'https://n8n.io',
+      'X-Title': 'n8n-universal-llm-vision',
+    };
+
+    const headers = getHeaders('openrouter', apiKey, customHeadersRecord);
+
+    // Authorization header must be present and correct
+    expect(headers['Authorization']).toBe(`Bearer ${apiKey}`);
+    // Provider-specific headers should be included
+    expect(headers['HTTP-Referer']).toBe('https://n8n.io');
+    expect(headers['X-Title']).toBe('n8n-universal-llm-vision');
+    // Default headers should also be present
+    expect(headers['Content-Type']).toBe('application/json');
+  });
+});
+

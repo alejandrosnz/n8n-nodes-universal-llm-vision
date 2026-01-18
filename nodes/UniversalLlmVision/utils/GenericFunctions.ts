@@ -29,17 +29,17 @@ export interface RequestBuilt {
  * Build complete request for OpenAI-compatible providers
  * @param options - Request configuration options
  * @param baseUrl - Optional custom base URL
- * @param customHeaders - Additional headers to include
+ * @param customHeaders - Additional headers to include (note: headers are managed separately in RequestHandler)
  * @returns RequestBuilt - Complete request configuration
  */
 export function buildOpenAiRequest(
   options: RequestBuildOptions,
   baseUrl?: string,
+  // eslint-disable-next-line no-unused-vars
   customHeaders?: Record<string, string>,
 ): RequestBuilt {
   const { provider, model, prompt, image, imageDetail, temperature, maxTokens, topP, systemPrompt, responseFormat, additionalParameters } = options;
 
-  const headers = getHeaders(provider, '', customHeaders);
   const url = getApiUrl(provider, baseUrl);
 
   const providerConfig = getProvider(provider);
@@ -109,24 +109,24 @@ export function buildOpenAiRequest(
     Object.assign(body, additionalParameters);
   }
 
-  return { url, headers, body };
+  return { url, headers: {}, body };
 }
 
 /**
  * Build complete request for Anthropic provider
  * @param options - Request configuration options
  * @param baseUrl - Optional custom base URL
- * @param customHeaders - Additional headers to include
+ * @param customHeaders - Additional headers to include (note: headers are managed separately in RequestHandler)
  * @returns RequestBuilt - Complete request configuration
  */
 export function buildAnthropicRequest(
   options: RequestBuildOptions,
   baseUrl?: string,
+  // eslint-disable-next-line no-unused-vars
   customHeaders?: Record<string, string>,
 ): RequestBuilt {
   const { model, prompt, image, temperature, maxTokens, topP, systemPrompt, additionalParameters } = options;
 
-  const headers = getHeaders(options.provider, '', customHeaders);
   const url = getApiUrl(options.provider, baseUrl);
 
   const body: any = {
@@ -184,7 +184,7 @@ export function buildAnthropicRequest(
     Object.assign(body, additionalParameters);
   }
 
-  return { url, headers, body };
+  return { url, headers: {}, body };
 }
 
 /**
