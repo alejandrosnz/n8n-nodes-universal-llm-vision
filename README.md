@@ -33,20 +33,21 @@ Install via n8n's community node interface:
 ### Supported Providers
 
 - OpenAI
+- Google Gemini
 - Anthropic
+- OpenRouter
 - Groq
 - Grok (X.AI)
-- OpenRouter
-- Google Gemini
-- Custom
+- Custom (OpenAI-compatible API)
 
 ### Supported Models
 
 - GPT 5, GPT 4.1, GPT 4o, ... (OpenAI)
-- Claude 4.5 Sonnet, Claude 4.5 Haiku, ... (Anthropic)
-- Various vision models (OpenRouter)
-- Gemini 3.0 Flash, ... (Google)
-- Any compatible API (Custom)
+- Claude 4.5 Sonnet & Haiku, ... (Anthropic)
+- Gemini 2.5 Flash Lite, Gemini 3.0 Flash, ... (Google)
+- Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL, ... (OpenRouter)
+- Llama 4 Maverick (Groq)
+- Grok 4.1 Fast (Grok/X.AI)
 
 ### Available Operations
 
