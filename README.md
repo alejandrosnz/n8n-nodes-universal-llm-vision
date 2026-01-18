@@ -4,6 +4,9 @@ A comprehensive n8n community node for analyzing images using multiple LLM visio
 
 ![Sample usage in a workflow](docs/img/sample_usage.png)
 
+
+![Sample analysis result](docs/img/sample_analysis.png)
+
 ## Installation
 
 Install via npm:
