@@ -155,6 +155,18 @@ describe('Provider Configuration', () => {
       expect(provider.requestFormat).toBe('anthropic');
     });
 
+    it('should return Gemini provider', () => {
+      const provider = getProvider('gemini');
+      expect(provider.displayName).toBe('Google Gemini');
+      expect(provider.baseUrl).toBe('https://generativelanguage.googleapis.com/v1beta/openai/');
+      expect(provider.apiEndpoint).toBe('/chat/completions');
+      expect(provider.requestFormat).toBe('openai');
+      expect(provider.responseFormat).toBe('openai');
+      expect(provider.supportsImageDetail).toBe(true);
+      expect(provider.supportsJsonResponse).toBe(true);
+      expect(provider.documentationUrl).toBe('https://ai.google.dev/gemini-api/docs/openai');
+    });
+
     it('should return Groq provider', () => {
       const provider = getProvider('groq');
       expect(provider.displayName).toBe('Groq');

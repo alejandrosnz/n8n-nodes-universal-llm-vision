@@ -3,7 +3,7 @@
  * Centralized management of all LLM vision providers, their APIs, authentication, and request/response formats
  */
 
-export type ProviderType = 'openrouter' | 'groq' | 'grok' | 'openai' | 'anthropic' | 'custom';
+export type ProviderType = 'openrouter' | 'groq' | 'grok' | 'openai' | 'anthropic' | 'gemini' | 'custom';
 
 export interface ProviderConfig {
   name: string;
@@ -98,6 +98,21 @@ export const PROVIDERS: Record<ProviderType, ProviderConfig> = {
     supportsImageDetail: false,
     supportsJsonResponse: false,
     documentationUrl: 'https://docs.anthropic.com',
+  },
+  gemini: {
+    name: 'gemini',
+    displayName: 'Google Gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    apiEndpoint: '/chat/completions',
+    headers: (apiKey: string) => ({
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    }),
+    requestFormat: 'openai',
+    responseFormat: 'openai',
+    supportsImageDetail: true,
+    supportsJsonResponse: true,
+    documentationUrl: 'https://ai.google.dev/gemini-api/docs/openai',
   },
   custom: {
     name: 'custom',

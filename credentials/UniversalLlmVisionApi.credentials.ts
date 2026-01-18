@@ -20,6 +20,7 @@ export class UniversalLlmVisionApi implements ICredentialType {
         { name: 'Grok (X.AI)', value: 'grok' },
         { name: 'OpenAI', value: 'openai' },
         { name: 'Anthropic', value: 'anthropic' },
+        { name: 'Google Gemini', value: 'gemini' },
         { name: 'Custom Provider', value: 'custom' },
       ],
       default: 'openai',

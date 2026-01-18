@@ -1,6 +1,6 @@
 # n8n-nodes-universal-llm-vision
 
-A comprehensive n8n community node for analyzing images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic).
+A comprehensive n8n community node for analyzing images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic, Google Gemini).
 
 ## Installation
 
@@ -37,6 +37,7 @@ Install via n8n's community node interface:
 - Groq
 - Grok (X.AI)
 - OpenRouter
+- Google Gemini
 - Custom
 
 ### Supported Models
@@ -44,6 +45,7 @@ Install via n8n's community node interface:
 - GPT 5, GPT 4.1, GPT 4o, ... (OpenAI)
 - Claude 4.5 Sonnet, Claude 4.5 Haiku, ... (Anthropic)
 - Various vision models (OpenRouter)
+- Gemini 3.0 Flash, ... (Google)
 - Any compatible API (Custom)
 
 ### Available Operations

@@ -17,7 +17,7 @@ export class UniversalLlmVision implements INodeType {
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["model"] + " - " + $parameter["imageSource"]}}',
-    description: 'Analyze images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic)',
+      description: 'Analyze images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic, Google Gemini)',
     defaults: {
       name: 'Universal LLM Vision',
     },
