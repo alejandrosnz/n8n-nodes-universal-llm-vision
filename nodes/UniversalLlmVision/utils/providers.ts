@@ -29,8 +29,8 @@ export const PROVIDERS: Record<ProviderType, ProviderConfig> = {
     headers: (apiKey: string) => ({
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://n8n.io',
-      'X-Title': 'n8n-universal-llm-vision',
+      'HTTP-Referer': 'https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision',
+      'X-Title': 'Universal LLM Vision n8n Node',
     }),
     requestFormat: 'openai',
     responseFormat: 'openai',
