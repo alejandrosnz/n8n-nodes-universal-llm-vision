@@ -2,20 +2,13 @@
 
 A comprehensive n8n community node for analyzing images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic).
 
-![Sample usage in a workflow](docs/img/sample_usage.png)
-
-
-![Sample analysis result](docs/img/sample_analysis.png)
-
 ## Installation
 
-Install via npm:
+Install via n8n's community node interface:
 
-```bash
-npm install n8n-nodes-universal-llm-vision
-```
-
-Or install via n8n's community node interface.
+1. Open n8n in your browser
+2. Go to Settings > Community Nodes
+3. Search for "n8n-nodes-universal-llm-vision" and install
 
 ## Features
 
@@ -35,14 +28,23 @@ Or install via n8n's community node interface.
 2. Configure your API credentials for the chosen provider
 3. Select image source and analysis parameters
 
+![Sample usage in a workflow](docs/img/sample_usage.png)
+
 ### Supported Providers
 
-- **OpenAI**: GPT-4o, GPT-4 Vision
-- **Anthropic**: Claude 3.5 Sonnet
-- **Groq**: Llama 3.2 90B Vision
-- **Grok (X.AI)**: Grok Vision Beta
-- **OpenRouter**: Various vision models
-- **Custom**: Any compatible API
+- OpenAI
+- Anthropic
+- Groq
+- Grok (X.AI)
+- OpenRouter
+- Custom
+
+### Supported Models
+
+- GPT 5, GPT 4.1, GPT 4o, ... (OpenAI)
+- Claude 4.5 Sonnet, Claude 4.5 Haiku, ... (Anthropic)
+- Various vision models (OpenRouter)
+- Any compatible API (Custom)
 
 ### Available Operations
 
@@ -70,6 +72,8 @@ Set up your API credentials:
 
 ## Examples
 
+![Sample analysis result](docs/img/sample_analysis.png)
+
 ### Analyze Image from Binary Data
 
 1. Use a "Download" node to fetch an image
@@ -84,11 +88,6 @@ Set up your API credentials:
 3. Provide image URL
 4. Use prompt: "Extract all text from this image (OCR)"
 
-### Using Different Providers
-
-- **OpenAI**: Model "gpt-4o", prompt for detailed descriptions
-- **Anthropic**: Model "claude-3-5-sonnet-20241022", supports complex reasoning
-- **Groq**: Fast inference with "llama-3.2-90b-vision-preview"
 
 ## Development
 
