@@ -134,7 +134,7 @@ export class UniversalLlmVision implements INodeType {
         type: 'string',
         typeOptions: { rows: 4 },
         required: true,
-        default: 'Describe what you see in this image in detail',
+        default: 'Analyze this image and describe what you see',
         description: 'Question or instruction for analyzing the image',
         placeholder: 'Describe the main objects, colors, composition, and any text visible in this image',
       },
