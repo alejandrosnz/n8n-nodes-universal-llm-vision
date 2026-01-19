@@ -156,8 +156,8 @@ export class UniversalLlmVision implements INodeType {
               maxValue: 2,
               numberPrecision: 2,
             },
-            default: 1,
-            description: 'Controls randomness (0=deterministic, 2=most random)',
+            default: 0.2,
+            description: 'Randomness level. Use 0.2 for factual analysis (recommended), 0.7+ for creative descriptions',
           },
           {
             displayName: 'Max Tokens',
@@ -175,8 +175,8 @@ export class UniversalLlmVision implements INodeType {
               maxValue: 1,
               numberPrecision: 2,
             },
-            default: 1,
-            description: 'Controls diversity via nucleus sampling (0-1)',
+            default: 0.9,
+            description: 'Nucleus sampling. Keep at 0.9 for best results (default)',
           },
           {
             displayName: 'Image Detail',
@@ -205,8 +205,8 @@ export class UniversalLlmVision implements INodeType {
             displayName: 'System Prompt',
             name: 'systemPrompt',
             type: 'string',
-            typeOptions: { rows: 2 },
-            default: '',
+            typeOptions: { rows: 8 },
+            default: 'You are an AI assistant specialized in image understanding and visual analysis.\n\nRules:\n- Use only information clearly visible in the image\n- Never guess or assume information that cannot be visually confirmed\n- If unable to answer fully, explain what\'s missing\n- Be concise, factual, and neutral by default\n\nAdapt your response to the user\'s request:\n- Text extraction → reproduce exactly as seen\n- Description → summarize visible elements\n- Unanswerable questions → state this explicitly',
             description: 'System instructions for the model (overrides defaults)',
           },
           {
