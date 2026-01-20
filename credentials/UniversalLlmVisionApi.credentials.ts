@@ -21,7 +21,7 @@ export class UniversalLlmVisionApi implements ICredentialType {
         { name: 'OpenAI', value: 'openai' },
         { name: 'Anthropic', value: 'anthropic' },
         { name: 'Google Gemini', value: 'gemini' },
-        { name: 'Custom Provider', value: 'custom' },
+        { name: 'Custom Provider (OpenAI Compatible)', value: 'custom' },
       ],
       default: 'openai',
       required: true,
