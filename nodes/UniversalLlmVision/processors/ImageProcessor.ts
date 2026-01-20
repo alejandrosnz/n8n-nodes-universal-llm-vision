@@ -1,4 +1,5 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
+import { IMAGE_SIZE_LIMIT_BYTES, BASE64_REGEX, SUPPORTED_IMAGE_FORMATS } from '../constants/config';
 
 /**
  * Image processing utilities and types
@@ -18,28 +19,7 @@ export interface PreparedImage {
 }
 
 // MIME type definitions with magic bytes for detection
-export const SUPPORTED_MIME_TYPES: Record<string, MimeTypeConfig> = {
-  jpeg: {
-    extension: 'jpg|jpeg',
-    mimeType: 'image/jpeg',
-    magicBytes: [0xff, 0xd8, 0xff], // JPEG magic bytes
-  },
-  png: {
-    extension: 'png',
-    mimeType: 'image/png',
-    magicBytes: [0x89, 0x50, 0x4e, 0x47], // PNG magic bytes
-  },
-  webp: {
-    extension: 'webp',
-    mimeType: 'image/webp',
-    magicBytes: [0x52, 0x49, 0x46, 0x46], // WEBP magic bytes (simplified)
-  },
-  gif: {
-    extension: 'gif',
-    mimeType: 'image/gif',
-    magicBytes: [0x47, 0x49, 0x46], // GIF magic bytes
-  },
-};
+export const SUPPORTED_MIME_TYPES: Record<string, MimeTypeConfig> = SUPPORTED_IMAGE_FORMATS as any;
 
 /**
  * Detect MIME type from file extension
@@ -142,7 +122,7 @@ export async function prepareImage(
   imageData: any,
   filename?: string,
 ): Promise<PreparedImage> {
-  const maxSize = 20 * 1024 * 1024; // 20MB
+  const maxSize = IMAGE_SIZE_LIMIT_BYTES;
 
   if (source === 'binary') {
     if (!imageData) {
@@ -196,7 +176,7 @@ export async function prepareImage(
     let buffer: Buffer;
     try {
       // First validate that it's valid base64
-      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(imageData.data)) {
+      if (!BASE64_REGEX.test(imageData.data)) {
         throw new Error('Invalid base64 format');
       }
 
@@ -218,7 +198,7 @@ export async function prepareImage(
 
     if (buffer.length > maxSize) {
       throw new Error(
-        `Image size exceeds maximum of 20MB ` +
+        `Image size exceeds maximum of ${IMAGE_SIZE_LIMIT_BYTES / 1024 / 1024}MB ` +
         `(got ${(buffer.length / 1024 / 1024).toFixed(2)}MB). ` +
         `Try compressing the image or using a smaller resolution.`
       );
@@ -266,7 +246,7 @@ export async function prepareImage(
 
     if (buffer.length > maxSize) {
       throw new Error(
-        `Image size exceeds maximum of 20MB (got ${(buffer.length / 1024 / 1024).toFixed(2)}MB)`
+        `Image size exceeds maximum of ${IMAGE_SIZE_LIMIT_BYTES / 1024 / 1024}MB (got ${(buffer.length / 1024 / 1024).toFixed(2)}MB)`
       );
     }
 

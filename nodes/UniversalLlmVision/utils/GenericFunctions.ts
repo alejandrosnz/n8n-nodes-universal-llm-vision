@@ -1,9 +1,11 @@
 /**
  * Generic helper functions for request building and response parsing
+ * Uses the Strategy pattern for provider-specific logic
  */
 
 import type { PreparedImage } from '../processors/ImageProcessor';
-import { getHeaders, getApiUrl, getProvider } from './providers';
+import { getProvider } from '../providers/ProviderRegistry';
+import type { IProviderStrategy, ProviderRequestOptions } from '../providers/IProviderStrategy';
 
 export interface RequestBuildOptions {
   provider: string;
@@ -26,237 +28,78 @@ export interface RequestBuilt {
 }
 
 /**
- * Build complete request for OpenAI-compatible providers
+ * Build complete request for the specified provider
+ * Delegates to provider-specific strategy
  * @param options - Request configuration options
- * @param baseUrl - Optional custom base URL
- * @param customHeaders - Additional headers to include (note: headers are managed separately in RequestHandler)
- * @returns RequestBuilt - Complete request configuration
- */
-export function buildOpenAiRequest(
-  options: RequestBuildOptions,
-  baseUrl?: string,
-  // eslint-disable-next-line no-unused-vars
-  customHeaders?: Record<string, string>,
-): RequestBuilt {
-  const { provider, model, prompt, image, imageDetail, temperature, maxTokens, topP, systemPrompt, responseFormat, additionalParameters } = options;
-
-  const url = getApiUrl(provider, baseUrl);
-
-  const providerConfig = getProvider(provider);
-  const supportsDetail = providerConfig.supportsImageDetail;
-
-  const body: any = {
-    model,
-  };
-
-  // Add model parameters if specified
-  if (temperature !== undefined) body.temperature = temperature;
-  if (maxTokens !== undefined) body.max_tokens = maxTokens;
-  if (topP !== undefined) body.top_p = topP;
-
-  // Add response format if specified and supported
-  if (responseFormat && providerConfig.supportsJsonResponse) {
-    body.response_format = { type: responseFormat };
-  }
-
-  // Build messages
-  const messages: any[] = [];
-
-  if (systemPrompt) {
-    messages.push({
-      role: 'system',
-      content: systemPrompt,
-    });
-  }
-
-  // Build user message with image
-  const userContent: any[] = [
-    {
-      type: 'text',
-      text: prompt,
-    },
-  ];
-
-  if (image.source === 'url') {
-    // URL reference
-    userContent.push({
-      type: 'image_url',
-      image_url: {
-        url: image.data,
-        ...(supportsDetail && imageDetail ? { detail: imageDetail } : {}),
-      },
-    });
-  } else {
-    // Base64 embedded
-    userContent.push({
-      type: 'image_url',
-      image_url: {
-        url: `data:${image.mimeType};base64,${image.data}`,
-        ...(supportsDetail && imageDetail ? { detail: imageDetail } : {}),
-      },
-    });
-  }
-
-  messages.push({
-    role: 'user',
-    content: userContent,
-  });
-
-  body.messages = messages;
-
-  // Add any additional parameters
-  if (additionalParameters) {
-    Object.assign(body, additionalParameters);
-  }
-
-  return { url, headers: {}, body };
-}
-
-/**
- * Build complete request for Anthropic provider
- * @param options - Request configuration options
- * @param baseUrl - Optional custom base URL
- * @param customHeaders - Additional headers to include (note: headers are managed separately in RequestHandler)
- * @returns RequestBuilt - Complete request configuration
- */
-export function buildAnthropicRequest(
-  options: RequestBuildOptions,
-  baseUrl?: string,
-  // eslint-disable-next-line no-unused-vars
-  customHeaders?: Record<string, string>,
-): RequestBuilt {
-  const { model, prompt, image, temperature, maxTokens, topP, systemPrompt, additionalParameters } = options;
-
-  const url = getApiUrl(options.provider, baseUrl);
-
-  const body: any = {
-    model,
-  };
-
-  // Add model parameters if specified
-  if (temperature !== undefined) body.temperature = temperature;
-  if (maxTokens !== undefined) body.max_tokens = maxTokens;
-  if (topP !== undefined) body.top_p = topP;
-
-  // Add system prompt if specified
-  if (systemPrompt) {
-    body.system = systemPrompt;
-  }
-
-  // Build messages with image
-  const content: any[] = [];
-
-  // Add image first
-  if (image.source === 'url') {
-    content.push({
-      type: 'image',
-      source: {
-        type: 'url',
-        url: image.data,
-      },
-    });
-  } else {
-    content.push({
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: image.mimeType,
-        data: image.data,
-      },
-    });
-  }
-
-  // Add text prompt
-  content.push({
-    type: 'text',
-    text: prompt,
-  });
-
-  body.messages = [
-    {
-      role: 'user',
-      content,
-    },
-  ];
-
-  // Add any additional parameters
-  if (additionalParameters) {
-    Object.assign(body, additionalParameters);
-  }
-
-  return { url, headers: {}, body };
-}
-
-/**
- * Build request based on provider type
- * @param options - Request configuration options
- * @param baseUrl - Optional custom base URL
- * @param customHeaders - Additional headers to include
+ * @param apiKey - API key for authentication
+ * @param customBaseUrl - Optional custom base URL
+ * @param customHeaders - Additional custom headers to include
  * @returns RequestBuilt - Complete request configuration
  */
 export function buildRequest(
   options: RequestBuildOptions,
-  baseUrl?: string,
+  apiKey: string,
+  customBaseUrl?: string,
   customHeaders?: Record<string, string>,
 ): RequestBuilt {
-  const providerConfig = getProvider(options.provider);
+  const strategy = getProvider(options.provider, customBaseUrl);
 
-  if (providerConfig.requestFormat === 'anthropic') {
-    return buildAnthropicRequest(options, baseUrl, customHeaders);
+  // Convert RequestBuildOptions to ProviderRequestOptions
+  const providerOptions: ProviderRequestOptions = {
+    model: options.model,
+    prompt: options.prompt,
+    image: options.image,
+    imageDetail: options.imageDetail,
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    topP: options.topP,
+    systemPrompt: options.systemPrompt,
+    responseFormat: options.responseFormat,
+    additionalParameters: options.additionalParameters,
+  };
+
+  // Build request body using strategy
+  const body = strategy.buildRequestBody(providerOptions);
+
+  // Get API URL from strategy
+  const url = strategy.getApiUrl(customBaseUrl);
+
+  // Get headers with authentication
+  const headers = strategy.buildHeaders(apiKey);
+
+  // Merge custom headers (prevent overriding auth headers)
+  if (customHeaders) {
+    for (const [key, value] of Object.entries(customHeaders)) {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey !== 'authorization' && lowerKey !== 'x-api-key' && value) {
+        headers[key] = value;
+      }
+    }
   }
 
-  return buildOpenAiRequest(options, baseUrl, customHeaders);
+  return { url, headers, body };
 }
 
 /**
- * Extract analysis from OpenAI response
- * @param response - Raw API response from OpenAI-compatible provider
- * @returns string - Extracted analysis text
- */
-export function extractOpenAiAnalysis(response: any): string {
-  return response.choices?.[0]?.message?.content || '';
-}
-
-/**
- * Extract analysis from Anthropic response
- * @param response - Raw API response from Anthropic
- * @returns string - Extracted analysis text
- */
-export function extractAnthropicAnalysis(response: any): string {
-  return response.content?.[0]?.text || '';
-}
-
-/**
- * Extract analysis based on provider response format
+ * Extract analysis from API response based on provider
  * @param provider - Provider name (e.g., 'openai', 'anthropic')
  * @param response - Raw API response
  * @returns string - Extracted analysis text
  */
 export function extractAnalysis(provider: string, response: any): string {
-  const providerConfig = getProvider(provider);
-
-  if (providerConfig.responseFormat === 'anthropic') {
-    return extractAnthropicAnalysis(response);
-  }
-
-  return extractOpenAiAnalysis(response);
+  const strategy = getProvider(provider);
+  return strategy.extractAnalysis(response);
 }
 
 /**
- * Extract metadata from response
+ * Extract metadata from response based on provider
+ * @param provider - Provider name
  * @param response - Raw API response
  * @returns Record<string, any> - Metadata object with usage stats and model info
  */
-export function extractMetadata(response: any): Record<string, any> {
-  const usage = response.usage || {};
-  return {
-    model: response.model,
-    usage: {
-      input_tokens: usage.prompt_tokens || usage.input_tokens,
-      output_tokens: usage.completion_tokens || usage.output_tokens,
-    },
-    finish_reason: response.choices?.[0]?.finish_reason || response.stop_reason,
-  };
+export function extractMetadata(provider: string, response: any): Record<string, any> {
+  const strategy = getProvider(provider);
+  return strategy.extractMetadata(response);
 }
 
 /**
@@ -271,5 +114,28 @@ export function getHeadersWithAuth(
   apiKey: string,
   customHeaders?: Record<string, string>,
 ): Record<string, string> {
-  return getHeaders(provider, apiKey, customHeaders);
+  const strategy = getProvider(provider);
+  const headers = strategy.buildHeaders(apiKey);
+
+  // Add custom headers but don't allow them to override authentication headers
+  if (customHeaders) {
+    for (const [key, value] of Object.entries(customHeaders)) {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey !== 'authorization' && lowerKey !== 'x-api-key' && value) {
+        headers[key] = value;
+      }
+    }
+  }
+
+  return headers;
+}
+
+/**
+ * Get provider strategy instance
+ * @param providerName - Name of the provider
+ * @param customBaseUrl - Optional custom base URL
+ * @returns IProviderStrategy - Strategy instance for the provider
+ */
+export function getProviderStrategy(providerName: string, customBaseUrl?: string): IProviderStrategy {
+  return getProvider(providerName, customBaseUrl);
 }

@@ -26,7 +26,7 @@ export class ResponseProcessor {
       // Include analysis and metadata at the top level
       return {
         [outputPropertyName]: analysis,
-        metadata: extractMetadata(response),
+        metadata: extractMetadata(provider, response),
       };
     } else {
       // Return only the analysis text
