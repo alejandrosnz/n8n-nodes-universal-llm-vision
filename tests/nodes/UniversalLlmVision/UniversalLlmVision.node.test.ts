@@ -9,8 +9,8 @@ import {
   getSupportedMimeTypes,
   prepareImage,
 } from '../../../nodes/UniversalLlmVision/processors/ImageProcessor';
-import { getProvider, getHeaders, getProviderOptions } from '../../../nodes/UniversalLlmVision/utils/providers';
 import { buildRequest, extractAnalysis, extractMetadata, getHeadersWithAuth } from '../../../nodes/UniversalLlmVision/utils/GenericFunctions';
+import { getProviderStrategy, getProviderOptions } from '../../../nodes/UniversalLlmVision/providers/ProviderRegistry';
 
 describe('UniversalLlmVision Node', () => {
   let node: UniversalLlmVision;
@@ -138,72 +138,57 @@ describe('MIME Type Detection', () => {
 });
 
 describe('Provider Configuration', () => {
-  describe('getProvider', () => {
+  describe('getProviderStrategy', () => {
     it('should return OpenAI provider by default', () => {
-      const provider = getProvider('openai');
-      expect(provider.displayName).toBe('OpenAI');
-      expect(provider.baseUrl).toBe('https://api.openai.com/v1');
-      expect(provider.apiEndpoint).toBe('/chat/completions');
-      expect(provider.requestFormat).toBe('openai');
+      const strategy = getProviderStrategy('openai');
+      expect(strategy.displayName).toBe('OpenAI');
+      expect(strategy.baseUrl).toBe('https://api.openai.com/v1');
+      expect(strategy.apiEndpoint).toBe('/chat/completions');
+      expect(strategy.requestFormat).toBe('openai');
     });
 
     it('should return Anthropic provider', () => {
-      const provider = getProvider('anthropic');
-      expect(provider.displayName).toBe('Anthropic');
-      expect(provider.baseUrl).toBe('https://api.anthropic.com/v1');
-      expect(provider.apiEndpoint).toBe('/messages');
-      expect(provider.requestFormat).toBe('anthropic');
+      const strategy = getProviderStrategy('anthropic');
+      expect(strategy.displayName).toBe('Anthropic');
+      expect(strategy.baseUrl).toBe('https://api.anthropic.com/v1');
+      expect(strategy.apiEndpoint).toBe('/messages');
+      expect(strategy.requestFormat).toBe('anthropic');
     });
 
     it('should return Gemini provider', () => {
-      const provider = getProvider('gemini');
-      expect(provider.displayName).toBe('Google Gemini');
-      expect(provider.baseUrl).toBe('https://generativelanguage.googleapis.com/v1beta/openai/');
-      expect(provider.apiEndpoint).toBe('/chat/completions');
-      expect(provider.requestFormat).toBe('openai');
-      expect(provider.responseFormat).toBe('openai');
-      expect(provider.supportsImageDetail).toBe(true);
-      expect(provider.supportsJsonResponse).toBe(true);
-      expect(provider.documentationUrl).toBe('https://ai.google.dev/gemini-api/docs/openai');
+      const strategy = getProviderStrategy('gemini');
+      expect(strategy.displayName).toBe('Google Gemini');
+      expect(strategy.baseUrl).toBe('https://generativelanguage.googleapis.com/v1beta/openai/');
+      expect(strategy.apiEndpoint).toBe('/chat/completions');
+      expect(strategy.requestFormat).toBe('openai');
+      expect(strategy.responseFormat).toBe('openai');
+      expect(strategy.supportsImageDetail).toBe(true);
+      expect(strategy.supportsJsonResponse).toBe(true);
+      expect(strategy.documentationUrl).toBe('https://ai.google.dev/gemini-api/docs/openai');
     });
 
     it('should return Groq provider', () => {
-      const provider = getProvider('groq');
-      expect(provider.displayName).toBe('Groq');
-      expect(provider.baseUrl).toBe('https://api.groq.com/openai/v1');
-      expect(provider.apiEndpoint).toBe('/chat/completions');
-      expect(provider.requestFormat).toBe('openai');
-      expect(provider.documentationUrl).toBe('https://console.groq.com/docs');
+      const strategy = getProviderStrategy('groq');
+      expect(strategy.displayName).toBe('Groq');
+      expect(strategy.baseUrl).toBe('https://api.groq.com/openai/v1');
+      expect(strategy.apiEndpoint).toBe('/chat/completions');
+      expect(strategy.requestFormat).toBe('openai');
+      expect(strategy.documentationUrl).toBe('https://console.groq.com/docs');
     });
 
     it('should handle provider normalization', () => {
-      const provider = getProvider('OPENAI');
-      expect(provider.displayName).toBe('OpenAI');
+      const strategy = getProviderStrategy('OPENAI');
+      expect(strategy.displayName).toBe('OpenAI');
     });
 
     it('should support custom provider', () => {
-      const provider = getProvider('custom');
-      expect(provider.displayName).toBe('Custom Provider');
-    });
-  });
-
-  describe('getHeaders', () => {
-    it('should return Bearer token for OpenAI', () => {
-      const headers = getHeaders('openai', 'test-key');
-      expect(headers['Authorization']).toBe('Bearer test-key');
-      expect(headers['Content-Type']).toBe('application/json');
+      const strategy = getProviderStrategy('custom');
+      expect(strategy.displayName).toContain('Custom');
     });
 
-    it('should return x-api-key for Anthropic', () => {
-      const headers = getHeaders('anthropic', 'test-key');
-      expect(headers['x-api-key']).toBe('test-key');
-      expect(headers['anthropic-version']).toBe('2023-06-01');
-    });
-
-    it('should include custom headers', () => {
-      const customHeaders = { 'X-Custom': 'value' };
-      const headers = getHeaders('openai', 'test-key', customHeaders);
-      expect(headers['X-Custom']).toBe('value');
+    it('should support custom base URL', () => {
+      const strategy = getProviderStrategy('custom', 'https://custom.api.com/v1');
+      expect(strategy.baseUrl).toBe('https://custom.api.com/v1');
     });
   });
 
@@ -211,7 +196,7 @@ describe('Provider Configuration', () => {
     it('should return provider options for UI dropdown', () => {
       const options = getProviderOptions();
 
-      // Should not include 'custom' in main list
+      // Should include custom provider
       const customOption = options.find((opt: any) => opt.value === 'custom');
       expect(customOption).toBeDefined();
       expect(customOption?.name).toBe('Custom Provider');
@@ -349,7 +334,7 @@ describe('Request Building', () => {
         maxTokens: 512,
       };
 
-      const request = buildRequest(options);
+      const request = buildRequest(options, 'test-api-key');
 
       expect(request.url).toContain('/chat/completions');
       expect(request.body.model).toBe('gpt-4-vision');
@@ -373,7 +358,7 @@ describe('Request Building', () => {
         additionalParameters: { custom: 'value' },
       };
 
-      const request = buildRequest(options);
+      const request = buildRequest(options, 'test-api-key');
 
       expect(request.body.messages).toHaveLength(2); // system + user message
       expect(request.body.messages[0].role).toBe('system');
@@ -396,7 +381,7 @@ describe('Request Building', () => {
         },
       };
 
-      const request = buildRequest(options);
+      const request = buildRequest(options, 'test-api-key');
 
       expect(request.url).toContain('/messages');
       expect(request.body.model).toBe('claude-3-sonnet');
@@ -419,7 +404,7 @@ describe('Request Building', () => {
         additionalParameters: { custom: 'value' },
       };
 
-      const request = buildRequest(options);
+      const request = buildRequest(options, 'test-api-key');
 
       expect(request.body.max_tokens).toBe(1000);
       expect(request.body.custom).toBe('value');
@@ -472,7 +457,7 @@ describe('Response Extraction', () => {
         choices: [{ finish_reason: 'stop' }],
       };
 
-      const metadata = extractMetadata(response);
+      const metadata = extractMetadata('openai', response);
 
       expect(metadata.model).toBe('gpt-4-vision');
       expect(metadata.usage).toBeDefined();

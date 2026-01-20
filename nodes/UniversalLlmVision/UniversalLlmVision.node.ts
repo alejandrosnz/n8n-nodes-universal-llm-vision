@@ -8,6 +8,7 @@ import { ImageProcessor } from './processors/ImageProcessor';
 import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
 import { getMimeTypeOptions } from './processors/ImageProcessor';
+import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -156,14 +157,14 @@ export class UniversalLlmVision implements INodeType {
               maxValue: 2,
               numberPrecision: 2,
             },
-            default: 0.2,
+            default: DEFAULT_MODEL_PARAMETERS.temperature,
             description: 'Randomness level. Use 0.2 for factual analysis (recommended), 0.7+ for creative descriptions',
           },
           {
             displayName: 'Max Tokens',
             name: 'maxTokens',
             type: 'number',
-            default: 1024,
+            default: DEFAULT_MODEL_PARAMETERS.maxTokens,
             description: 'Maximum length of the response in tokens',
           },
           {
@@ -175,7 +176,7 @@ export class UniversalLlmVision implements INodeType {
               maxValue: 1,
               numberPrecision: 2,
             },
-            default: 0.9,
+            default: DEFAULT_MODEL_PARAMETERS.topP,
             description: 'Nucleus sampling. Keep at 0.9 for best results (default)',
           },
           {
@@ -187,7 +188,7 @@ export class UniversalLlmVision implements INodeType {
               { name: 'Low (Fast)', value: 'low' },
               { name: 'High (Detailed)', value: 'high' },
             ],
-            default: 'auto',
+            default: DEFAULT_MODEL_PARAMETERS.imageDetail,
             description: 'Image resolution detail level (affects speed and cost). Not supported by all providers',
           },
         ],

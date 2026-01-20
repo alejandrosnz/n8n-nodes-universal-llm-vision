@@ -1,6 +1,7 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import type { PreparedImage } from '../processors/ImageProcessor';
 import { buildRequest, getHeadersWithAuth } from '../utils/GenericFunctions';
+import { REQUEST_TIMEOUT_MS } from '../constants/config';
 
 /**
  * RequestHandler class manages API request building and execution
@@ -56,7 +57,7 @@ export class RequestHandler {
     };
 
     // Build the request URL and body using provider-specific logic
-    const { url, body } = buildRequest(requestOptions, customBaseUrl, customHeaders);
+    const { url, body } = buildRequest(requestOptions, apiKey, customBaseUrl, customHeaders);
 
     // Get headers with API key authentication injected
     const headers = getHeadersWithAuth(provider, apiKey, customHeaders);
@@ -68,7 +69,7 @@ export class RequestHandler {
       headers,
       body: JSON.stringify(body),
       json: true,
-      timeout: 60000, // 60 second timeout for image processing
+      timeout: REQUEST_TIMEOUT_MS, // Configurable timeout for image processing
     });
 
     return response;
