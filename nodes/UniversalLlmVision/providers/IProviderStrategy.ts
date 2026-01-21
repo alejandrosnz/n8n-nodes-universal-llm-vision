@@ -99,6 +99,35 @@ export interface IProviderStrategy {
    * @returns Record<string, any> - Metadata including usage stats
    */
   extractMetadata(response: any): Record<string, any>;
+
+  /**
+   * Get the models endpoint for fetching available models (optional)
+   * @returns string | undefined - Models API endpoint path
+   */
+  getModelsEndpoint?(): string;
+
+  /**
+   * Filter models to only include vision-capable models (optional)
+   * @param models - Array of model objects from API
+   * @returns any[] - Filtered array of vision-capable models
+   */
+  filterVisionModels?(models: any[]): any[];
+
+  /**
+   * Parse models API response into standardized format (optional)
+   * @param response - Raw API response from models endpoint
+   * @returns ModelInfo[] - Parsed model information
+   */
+  parseModelsResponse?(response: any): ModelInfo[];
+}
+
+/**
+ * Model information structure
+ */
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description?: string;
 }
 
 /**

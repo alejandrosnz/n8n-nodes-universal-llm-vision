@@ -3,9 +3,10 @@
  * Uses the Strategy pattern for provider-specific logic
  */
 
+import type { IHttpRequestMethods, IHttpRequestOptions } from 'n8n-workflow';
 import type { PreparedImage } from '../processors/ImageProcessor';
 import { getProvider } from '../providers/ProviderRegistry';
-import type { IProviderStrategy, ProviderRequestOptions } from '../providers/IProviderStrategy';
+import type { IProviderStrategy, ProviderRequestOptions, ModelInfo } from '../providers/IProviderStrategy';
 
 export interface RequestBuildOptions {
   provider: string;
@@ -138,4 +139,63 @@ export function getHeadersWithAuth(
  */
 export function getProviderStrategy(providerName: string, customBaseUrl?: string): IProviderStrategy {
   return getProvider(providerName, customBaseUrl);
+}
+
+/**
+ * Fetch available models from provider API
+ * @param provider - Provider name (e.g., 'openai', 'openrouter')
+ * @param apiKey - API key for authentication
+ * @param customBaseUrl - Optional custom base URL
+ * @param httpRequest - HTTP request function
+ * @returns Promise<ModelInfo[]> - Array of available vision-capable models
+ */
+export async function fetchProviderModels(
+  provider: string,
+  apiKey: string,
+  customBaseUrl: string | undefined,
+  httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
+): Promise<ModelInfo[]> {
+  try {
+    const strategy = getProvider(provider, customBaseUrl);
+
+    // Check if strategy supports model fetching
+    if (!strategy.getModelsEndpoint || !strategy.parseModelsResponse) {
+      throw new Error(`Provider ${provider} does not support automatic model listing`);
+    }
+
+    // Build models endpoint URL
+    const baseUrl = customBaseUrl || strategy.baseUrl;
+    const modelsEndpoint = strategy.getModelsEndpoint();
+    const url = baseUrl.replace(/\/$/, '') + modelsEndpoint;
+
+    // Build headers
+    const headers = strategy.buildHeaders(apiKey);
+
+    // Make request to fetch models
+    const requestOptions: IHttpRequestOptions = {
+      method: 'GET' as IHttpRequestMethods,
+      url,
+      headers,
+      json: true,
+    };
+
+    const response = await httpRequest(requestOptions);
+
+    // Parse response using strategy
+    const parsedModels = strategy.parseModelsResponse(response);
+
+    // Filter for vision-capable models if supported
+    if (strategy.filterVisionModels) {
+      // Filter already parsed models (they have ModelInfo format)
+      const rawModels = response.data || response || [];
+      const filteredRaw = strategy.filterVisionModels(rawModels);
+      return strategy.parseModelsResponse(
+        response.data ? { data: filteredRaw } : filteredRaw
+      );
+    }
+
+    return parsedModels;
+  } catch (error) {
+    throw new Error(`Failed to fetch models from ${provider}: ${error.message}`);
+  }
 }
