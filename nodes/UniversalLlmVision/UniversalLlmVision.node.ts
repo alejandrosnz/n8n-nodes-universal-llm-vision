@@ -11,7 +11,7 @@ import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
 import { getMimeTypeOptions } from './processors/ImageProcessor';
 import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
-import { fetchProviderModels } from './utils/GenericFunctions';
+import { fetchProviderModels, detectCredentials } from './utils/GenericFunctions';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -29,8 +29,12 @@ export class UniversalLlmVision implements INodeType {
     outputs: ['main'],
     credentials: [
       {
+        name: 'openRouterApi',
+        required: false,
+      },
+      {
         name: 'universalLlmVisionApi',
-        required: true,
+        required: false,
       },
     ],
     properties: [
@@ -293,23 +297,12 @@ export class UniversalLlmVision implements INodeType {
        */
       async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         try {
-          // Detect which credential is being used
-          let provider: string;
-          let apiKey: string;
-          let customBaseUrl: string | undefined;
+          // Detect configured credentials
+          const credInfo = await detectCredentials(
+            (type: string) => this.getCredentials(type),
+          );
 
-          try {
-            // Try OpenRouter credential first
-            const credentials = await this.getCredentials('openRouterApi');
-            provider = 'openrouter';
-            apiKey = credentials.apiKey as string;
-          } catch {
-            // Fall back to universal credential
-            const credentials = await this.getCredentials('universalLlmVisionApi');
-            provider = (credentials.provider as string) || 'openai';
-            apiKey = credentials.apiKey as string;
-            customBaseUrl = (credentials.baseUrl as string) || undefined;
-          }
+          const { provider, apiKey, customBaseUrl } = credInfo;
 
           // Only fetch models for OpenAI and OpenRouter
           if (provider !== 'openai' && provider !== 'openrouter') {
@@ -361,27 +354,12 @@ export class UniversalLlmVision implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
-    // Detect which credential is being used and get the appropriate one
-    // First try OpenRouter credential, then fall back to universal credential
-    let credentials: any;
-    let credentialName: string;
-    let apiKey: string;
-    let customBaseUrl: string | undefined;
-    let provider: string;
+    // Detect configured credentials
+    const credInfo = await detectCredentials(
+      (type: string) => this.getCredentials(type),
+    );
 
-    try {
-      credentials = await this.getCredentials('openRouterApi');
-      credentialName = 'openRouterApi';
-      provider = 'openrouter';
-      apiKey = credentials.apiKey as string;
-    } catch {
-      // OpenRouter credential not configured, try universal credential
-      credentials = await this.getCredentials('universalLlmVisionApi');
-      credentialName = 'universalLlmVisionApi';
-      provider = (credentials.provider as string) || 'openai';
-      apiKey = credentials.apiKey as string;
-      customBaseUrl = (credentials.baseUrl as string) || undefined;
-    }
+    const { credentials, credentialName, provider, apiKey, customBaseUrl } = credInfo;
 
     // Process each input item
     for (let i = 0; i < items.length; i++) {
