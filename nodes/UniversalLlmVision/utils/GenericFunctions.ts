@@ -8,8 +8,16 @@ import type { PreparedImage } from '../processors/ImageProcessor';
 import { getProvider } from '../providers/ProviderRegistry';
 import type { IProviderStrategy, ProviderRequestOptions, ModelInfo } from '../providers/IProviderStrategy';
 
+export interface UniversalLlmVisionCredentials {
+  provider: string;
+  apiKey: string;
+  baseUrl?: string;
+  httpReferer?: string;
+  appTitle?: string;
+}
+
 export interface CredentialInfo {
-  credentials: any;
+  credentials: UniversalLlmVisionCredentials;
   credentialName: string;
   provider: string;
   apiKey: string;
@@ -37,50 +45,28 @@ export interface RequestBuilt {
 }
 
 /**
- * Detect and retrieve configured credentials
+ * Retrieve configured Universal LLM Vision API credentials
  * @param getCredentialsFn - Function to get credentials from n8n context
- * @returns Promise<CredentialInfo> - Credential information
+ * @returns Promise<CredentialInfo> - Credential information with provider type
  */
 export async function detectCredentials(
   getCredentialsFn: (type: string) => Promise<any>,
 ): Promise<CredentialInfo> {
-  // Try to get each credential type
-  let openRouterCreds: any;
-  let universalCreds: any;
+  // Get Universal LLM Vision API credentials
+  const credentials = await getCredentialsFn('universalLlmVisionApi') as UniversalLlmVisionCredentials;
 
-  try {
-    openRouterCreds = await getCredentialsFn('openRouterApi');
-  } catch {
-    openRouterCreds = null;
-  }
+  // Extract provider type from credential selector
+  const provider = credentials.provider || 'openai';
+  const apiKey = credentials.apiKey;
+  const customBaseUrl = credentials.baseUrl || undefined;
 
-  try {
-    universalCreds = await getCredentialsFn('universalLlmVisionApi');
-  } catch {
-    universalCreds = null;
-  }
-
-  // Prefer OpenRouter credential if both are configured
-  if (openRouterCreds?.apiKey) {
-    return {
-      credentials: openRouterCreds,
-      credentialName: 'openRouterApi',
-      provider: 'openrouter',
-      apiKey: openRouterCreds.apiKey as string,
-    };
-  }
-
-  if (universalCreds?.apiKey) {
-    return {
-      credentials: universalCreds,
-      credentialName: 'universalLlmVisionApi',
-      provider: (universalCreds.provider as string) || 'openai',
-      apiKey: universalCreds.apiKey as string,
-      customBaseUrl: (universalCreds.baseUrl as string) || undefined,
-    };
-  }
-
-  throw new Error('No credentials configured. Please configure OpenRouter or Universal LLM Vision API credentials');
+  return {
+    credentials,
+    credentialName: 'universalLlmVisionApi',
+    provider,
+    apiKey,
+    customBaseUrl,
+  };
 }
 
 /**

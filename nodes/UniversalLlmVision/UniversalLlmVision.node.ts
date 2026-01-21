@@ -29,12 +29,8 @@ export class UniversalLlmVision implements INodeType {
     outputs: ['main'],
     credentials: [
       {
-        name: 'openRouterApi',
-        required: false,
-      },
-      {
         name: 'universalLlmVisionApi',
-        required: false,
+        required: true,
       },
     ],
     properties: [
