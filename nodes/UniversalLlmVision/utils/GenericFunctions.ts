@@ -183,6 +183,90 @@ export function getProviderStrategy(providerName: string, customBaseUrl?: string
 }
 
 /**
+ * Fetch all vision-capable models from models.dev API
+ * @param httpRequest - HTTP request function
+ * @param providerFilter - Optional provider ID to filter models from a specific provider
+ * @returns Promise<ModelInfo[]> - Array of available vision-capable models
+ */
+export async function fetchAllVisionModels(
+  httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
+  providerFilter?: string,
+): Promise<ModelInfo[]> {
+  try {
+    const requestOptions: IHttpRequestOptions = {
+      method: 'GET' as IHttpRequestMethods,
+      url: 'https://models.dev/api.json',
+      headers: {
+        'Accept': 'application/json',
+      },
+      json: true,
+    };
+
+    const response = await httpRequest(requestOptions);
+
+    // Handle invalid/null responses
+    if (!response || typeof response !== 'object') {
+      return [];
+    }
+
+    const visionModels: ModelInfo[] = [];
+
+    // Iterate through all providers
+    for (const [providerId, providerData] of Object.entries(response)) {
+      // If filter is provided, skip providers that don't match
+      if (providerFilter && providerId !== providerFilter && !providerId.includes(providerFilter)) {
+        continue;
+      }
+
+      if (typeof providerData !== 'object' || !providerData) continue;
+
+      const provider = providerData as any;
+      const providerName = provider.name || providerId;
+      const models = provider.models || {};
+
+      // Iterate through all models from this provider
+      for (const [modelId, modelData] of Object.entries(models)) {
+        if (typeof modelData !== 'object' || !modelData) continue;
+
+        const model = modelData as any;
+
+        // Check if model supports image input
+        const inputModalities = model.modalities?.input || [];
+        if (inputModalities.includes('image')) {
+          visionModels.push({
+            id: `${providerId}/${modelId}`,
+            name: `${providerName}: ${model.name || modelId}`,
+            description: `$${model.cost?.input || 0} / $${model.cost?.output || 0} per 1M tokens`,
+            releaseDate: model.release_date,
+          });
+        }
+      }
+    }
+
+    // Sort models by release_date (newest first), then by name
+    visionModels.sort((a, b) => {
+      // Compare dates in descending order (newest first)
+      if (a.releaseDate && b.releaseDate) {
+        const dateComparison = b.releaseDate.localeCompare(a.releaseDate);
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+      } else if (a.releaseDate) {
+        return -1; // a has date, b doesn't - a comes first
+      } else if (b.releaseDate) {
+        return 1; // b has date, a doesn't - b comes first
+      }
+      // If both have same date or neither has date, sort by name
+      return a.name.localeCompare(b.name);
+    });
+
+    return visionModels;
+  } catch (error) {
+    throw new Error(`Failed to fetch models from models.dev API: ${error.message}`);
+  }
+}
+
+/**
  * Fetch available models from provider API
  * @param provider - Provider name (e.g., 'openai', 'openrouter')
  * @param apiKey - API key for authentication

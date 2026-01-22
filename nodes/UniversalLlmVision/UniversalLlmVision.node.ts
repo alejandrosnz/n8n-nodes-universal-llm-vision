@@ -11,7 +11,7 @@ import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
 import { getMimeTypeOptions } from './processors/ImageProcessor';
 import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
-import { fetchProviderModels, detectCredentials } from './utils/GenericFunctions';
+import { fetchAllVisionModels, detectCredentials } from './utils/GenericFunctions';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -40,10 +40,11 @@ export class UniversalLlmVision implements INodeType {
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getModels',
+          allowCustomValue: true,
         },
         required: true,
         default: '',
-        description: 'Vision-capable model for the selected provider. List is fetched automatically from provider API',
+        description: 'Vision-capable model for the selected provider. List is fetched automatically from provider API, or enter model name manually',
       },
 
       // Image Input Configuration
@@ -287,36 +288,23 @@ export class UniversalLlmVision implements INodeType {
   methods = {
     loadOptions: {
       /**
-       * Fetch available vision-capable models from the selected provider
+       * Fetch available vision-capable models from models.dev API, filtered by provider
        * @param this - The load options context provided by n8n
        * @returns Promise<INodePropertyOptions[]> - Array of model options
        */
       async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         try {
-          // Detect configured credentials
+          // Detect configured credentials to get the selected provider
           const credInfo = await detectCredentials(
             (type: string) => this.getCredentials(type),
           );
 
-          const { provider, apiKey, customBaseUrl } = credInfo;
+          const { provider } = credInfo;
 
-          // Only fetch models for OpenAI and OpenRouter
-          if (provider !== 'openai' && provider !== 'openrouter') {
-            return [
-              {
-                name: `⚠️ Automatic model listing not available for ${provider}`,
-                value: '',
-                description: 'Switch the Model input to "Expression" mode and enter model name manually',
-              },
-            ];
-          }
-
-          // Fetch models from provider API
-          const models = await fetchProviderModels(
-            provider,
-            apiKey,
-            customBaseUrl,
+          // Fetch vision-capable models, filtered by the selected provider
+          const models = await fetchAllVisionModels(
             this.helpers.httpRequest,
+            provider,
           );
 
           // Convert to INodePropertyOptions format
@@ -329,9 +317,9 @@ export class UniversalLlmVision implements INodeType {
           // Return error message as option if fetching fails
           return [
             {
-              name: '⚠️ Error loading models',
+              name: '⚠️ Error loading models from models.dev',
               value: '',
-              description: `${(error as Error).message}. Review your credentials and API key, or switch the Model input to "Expression" mode and enter model name manually`,
+              description: `${(error as Error).message}. Switch the Model input to "Expression" mode and enter model name manually`,
             },
           ];
         }

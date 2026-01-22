@@ -19,6 +19,7 @@ Install via n8n's community node interface:
 - ✅ Custom headers and advanced parameters
 - ✅ Comprehensive testing included
 - ✅ n8n Agents compatible
+- ✅ **Auto-discovery of all vision-capable models from the market** (powered by [models.dev](https://models.dev))
 
 ## Usage
 
@@ -42,12 +43,17 @@ Install via n8n's community node interface:
 
 ### Supported Models
 
+The node automatically fetches and displays **all vision-capable models** from the market using the [models.dev](https://models.dev) API. This includes:
+
 - GPT 5, GPT 4.1, GPT 4o, ... (OpenAI)
 - Claude 4.5 Sonnet & Haiku, ... (Anthropic)
 - Gemini 2.5 Flash Lite, Gemini 3.0 Flash, ... (Google)
 - Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL, ... (OpenRouter)
 - Llama 4 Maverick (Groq)
 - Grok 4.1 Fast (Grok/X.AI)
+- And many more providers and models!
+
+**Note**: The model list is fetched dynamically and includes only models that support image input. Each model shows its context window size and pricing information to help you make informed decisions.
 
 ### Available Operations
 
@@ -78,7 +84,7 @@ To use a custom OpenAI-compatible LLM vision API:
 
 #### Node Parameters
 
-- **Model**: Model identifier (e.g., gpt-4o)
+- **Model**: Model identifier - auto-populated with all vision-capable models from the market, including context size and pricing info
 - **Image Source**: Binary Data, URL, or Base64
 - **Prompt**: Analysis prompt
 - **Image Detail**: Auto/Low/High resolution
