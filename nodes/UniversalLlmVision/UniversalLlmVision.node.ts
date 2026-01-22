@@ -19,7 +19,8 @@ export class UniversalLlmVision implements INodeType {
     name: 'universalLlmVision',
     icon: 'file:vision.svg',
     group: ['transform'],
-    version: 1,
+    version: [1, 1.1],
+    defaultVersion: 1.1,
     subtitle: '={{$parameter["model"] + " - " + $parameter["imageSource"]}}',
       description: 'Analyze images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic, Google Gemini)',
     defaults: {
@@ -34,10 +35,31 @@ export class UniversalLlmVision implements INodeType {
       },
     ],
     properties: [
+      // Version 1: Simple string input
+      {
+        displayName: 'Model',
+        name: 'model',
+        type: 'string',
+        displayOptions: {
+          show: {
+            '@version': [1],
+          },
+        },
+        required: true,
+        default: '',
+        placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
+        description: 'Vision-capable model ID for the selected provider (e.g., gpt-4-vision-preview, claude-3-opus-20240229)',
+      },
+      // Version 1.1: Dynamic dropdown with auto-fetch
       {
         displayName: 'Model',
         name: 'model',
         type: 'options',
+        displayOptions: {
+          show: {
+            '@version': [1.1],
+          },
+        },
         typeOptions: {
           loadOptionsMethod: 'getModels',
           allowCustomValue: true,
@@ -215,6 +237,11 @@ export class UniversalLlmVision implements INodeType {
             default: '',
             placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
             description: 'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
+            displayOptions: {
+              show: {
+                '@version': [1.1],
+              },
+            },
           },
           {
             displayName: 'System Prompt',
@@ -368,13 +395,15 @@ export class UniversalLlmVision implements INodeType {
     for (let i = 0; i < items.length; i++) {
       try {
         // Extract node parameters for this item
+        const nodeVersion = this.getNode().typeVersion;
         const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
-        const manualModelId = (advancedOptions.manualModelId as string || '').trim();
+        const manualModelId = nodeVersion >= 1.1 ? (advancedOptions.manualModelId as string || '').trim() : '';
         
+        console.log('[DEBUG] nodeVersion:', nodeVersion);
         console.log('[DEBUG] advancedOptions:', JSON.stringify(advancedOptions, null, 2));
         console.log('[DEBUG] manualModelId:', manualModelId);
         
-        // Prioritize manual model ID if provided, otherwise use automatic model selection
+        // Prioritize manual model ID if provided (v1.1+), otherwise use model from parameter
         const model = manualModelId !== '' 
           ? manualModelId
           : (this.getNodeParameter('model', i, '') as string);
