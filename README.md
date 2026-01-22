@@ -45,6 +45,14 @@ Install via n8n's community node interface:
 
 The node automatically fetches and displays **all vision-capable models** from the market using the [models.dev](https://models.dev) API. Each model listing shows pricing and the exact model ID in parentheses (e.g., `$2.5 / $10 per 1M tokens (gpt-4o)`).
 
+The following models have been tested and verified to work:
+
+- **OpenAI**: GPT 5, GPT 4.1, GPT 4o, ...
+- **Anthropic**: Claude 4.5 Sonnet & Haiku, ...
+- **Google**: Gemini 2.5 Flash Lite, Gemini 3.0 Flash, ...
+- **OpenRouter**: Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL, ...
+- **Grok/X.AI**: Grok 4.1 Fast
+
 ### Available Operations
 
 - **Analyze Image**: Analyze images with custom prompts
