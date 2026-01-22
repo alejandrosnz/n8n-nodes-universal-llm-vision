@@ -239,7 +239,7 @@ describe('fetchAllVisionModels', () => {
 
     expect(gpt4o).toBeDefined();
     expect(gpt4o!.name).toBe('OpenAI: GPT-4o');
-    expect(gpt4o!.description).toBe('$2.5 / $10 per 1M tokens');
+    expect(gpt4o!.description).toBe('$2.5 / $10 per 1M tokens (gpt-4o)');
   });
 
   it('should sort models by release_date newest first', async () => {
@@ -283,7 +283,7 @@ describe('fetchAllVisionModels', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('incomplete-model');
-    expect(result[0].description).toBe('$0 / $0 per 1M tokens');
+    expect(result[0].description).toBe('$0 / $0 per 1M tokens (incomplete-model)');
   });
 
   it('should skip providers without models', async () => {

@@ -236,7 +236,7 @@ export async function fetchAllVisionModels(
           visionModels.push({
             id: modelId,
             name: `${providerName}: ${model.name || modelId}`,
-            description: `$${model.cost?.input || 0} / $${model.cost?.output || 0} per 1M tokens`,
+            description: `$${model.cost?.input || 0} / $${model.cost?.output || 0} per 1M tokens (${modelId})`,
             releaseDate: model.release_date,
             provider: providerId,
           });
