@@ -23,7 +23,7 @@ describe('UniversalLlmVision Node', () => {
     expect(node).toBeDefined();
     expect(node.description.displayName).toBe('Universal LLM Vision');
     expect(node.description.name).toBe('universalLlmVision');
-    expect(node.description.version).toBe(1);
+    expect(node.description.version).toEqual([1, 1.1]);
   });
 
   it('should have image source parameter with binary, url, and base64 options', () => {
@@ -812,6 +812,7 @@ describe('Integration Tests - Execute Method', () => {
       getCredentials: jest.fn(),
       getNodeParameter: jest.fn(),
       continueOnFail: jest.fn(),
+      getNode: jest.fn(() => ({ typeVersion: 1.1 })),
       helpers: {
         getBinaryDataBuffer: jest.fn(),
         request: jest.fn(),

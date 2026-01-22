@@ -15,6 +15,7 @@ export const createMockExecuteFunctions = (): Partial<IExecuteFunctions> & {
   getCredentials: jest.Mock;
   getBinaryData: jest.Mock;
   continueOnFail: jest.Mock;
+  getNode: jest.Mock;
   helpers?: any;
 } => ({
   getNodeParameter: jest.fn(),
@@ -22,6 +23,7 @@ export const createMockExecuteFunctions = (): Partial<IExecuteFunctions> & {
   getCredentials: jest.fn(),
   getBinaryData: jest.fn(),
   continueOnFail: jest.fn(() => false),
+  getNode: jest.fn(() => ({ typeVersion: 1.1 })),
   helpers: {
     request: jest.fn(),
     getBinaryDataBuffer: jest.fn(),

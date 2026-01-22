@@ -399,16 +399,10 @@ export class UniversalLlmVision implements INodeType {
         const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
         const manualModelId = nodeVersion >= 1.1 ? (advancedOptions.manualModelId as string || '').trim() : '';
         
-        console.log('[DEBUG] nodeVersion:', nodeVersion);
-        console.log('[DEBUG] advancedOptions:', JSON.stringify(advancedOptions, null, 2));
-        console.log('[DEBUG] manualModelId:', manualModelId);
-        
         // Prioritize manual model ID if provided (v1.1+), otherwise use model from parameter
         const model = manualModelId !== '' 
           ? manualModelId
           : (this.getNodeParameter('model', i, '') as string);
-        
-        console.log('[DEBUG] Final model:', model);
         
         // Validate model ID is provided
         if (!model || model.trim() === '') {

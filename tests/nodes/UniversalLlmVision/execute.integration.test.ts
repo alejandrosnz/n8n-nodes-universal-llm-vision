@@ -26,6 +26,7 @@ const createMockExecuteFunctions = (): any => ({
   getCredentials: jest.fn(),
   getBinaryData: jest.fn(),
   continueOnFail: jest.fn(() => false),
+  getNode: jest.fn(() => ({ typeVersion: 1.1 })),
   helpers: {
     httpRequest: jest.fn(),
     request: jest.fn(), // Alias used by RequestHandler
