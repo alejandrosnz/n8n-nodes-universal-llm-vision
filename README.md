@@ -89,8 +89,24 @@ To use a custom OpenAI-compatible LLM vision API:
 - **Prompt**: Analysis prompt
 - **Image Detail**: Auto/Low/High resolution
 - **Model Parameters**: Temperature, Max Tokens, Top P
-- **Advanced Options**: System prompt, response format, custom headers
+- **Advanced Options**: 
+  - **Manual Model ID**: Optionally specify a model ID manually. When provided, this overrides the automatic Model dropdown selection. Useful for custom providers or when automatic model fetching fails.
+  - System prompt, response format, custom headers, additional parameters
 - **Output**: Property name and metadata inclusion
+
+#### Manual Model ID
+
+The node prioritizes the **Manual Model ID** field if it has a value. Use this when:
+- Automatic model fetching fails (common with custom providers)
+- The model you want isn't in the auto-fetched list
+- You prefer to specify the model ID directly
+
+**How to use:**
+
+1. Open **Advanced Options**
+2. Fill in **Manual Model ID** with your model identifier (e.g., `gpt-4-vision-preview`, `claude-3-opus-20240229`)
+3. The node will use this model ID instead of the dropdown selection
+4. Leave it empty to use the automatic Model dropdown as normal
 
 ## Examples
 

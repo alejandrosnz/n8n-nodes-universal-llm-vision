@@ -42,9 +42,9 @@ export class UniversalLlmVision implements INodeType {
           loadOptionsMethod: 'getModels',
           allowCustomValue: true,
         },
-        required: true,
+        required: false,
         default: '',
-        description: 'Vision-capable model for the selected provider. List is fetched automatically from provider API, or enter model name manually',
+        description: 'Vision-capable model for the selected provider. List is fetched automatically. To enter a model ID manually (e.g., for custom providers), use "Manual Model ID" in Advanced Options.',
       },
 
       // Image Input Configuration
@@ -209,6 +209,14 @@ export class UniversalLlmVision implements INodeType {
         default: {},
         options: [
           {
+            displayName: 'Manual Model ID',
+            name: 'manualModelId',
+            type: 'string',
+            default: '',
+            placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
+            description: 'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
+          },
+          {
             displayName: 'System Prompt',
             name: 'systemPrompt',
             type: 'string',
@@ -307,6 +315,17 @@ export class UniversalLlmVision implements INodeType {
             provider,
           );
 
+          // Check if model list is empty (common with custom providers)
+          if (models.length === 0) {
+            return [
+              {
+                name: '⚠️ No models found for this provider',
+                value: '',
+                description: 'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)',
+              },
+            ];
+          }
+
           // Convert to INodePropertyOptions format
           return models.map((model) => ({
             name: model.name,
@@ -319,7 +338,7 @@ export class UniversalLlmVision implements INodeType {
             {
               name: '⚠️ Error loading models from models.dev',
               value: '',
-              description: `${(error as Error).message}. Switch the Model input to "Expression" mode and enter model name manually`,
+              description: `${(error as Error).message}. Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)`,
             },
           ];
         }
@@ -349,10 +368,26 @@ export class UniversalLlmVision implements INodeType {
     for (let i = 0; i < items.length; i++) {
       try {
         // Extract node parameters for this item
-        const model = this.getNodeParameter('model', i) as string;
+        const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
+        const manualModelId = (advancedOptions.manualModelId as string || '').trim();
+        
+        console.log('[DEBUG] advancedOptions:', JSON.stringify(advancedOptions, null, 2));
+        console.log('[DEBUG] manualModelId:', manualModelId);
+        
+        // Prioritize manual model ID if provided, otherwise use automatic model selection
+        const model = manualModelId !== '' 
+          ? manualModelId
+          : (this.getNodeParameter('model', i, '') as string);
+        
+        console.log('[DEBUG] Final model:', model);
+        
+        // Validate model ID is provided
+        if (!model || model.trim() === '') {
+          throw new Error('Model is required. Please select a model from the dropdown or specify a "Manual Model ID" in Advanced Options.');
+        }
+        
         const prompt = this.getNodeParameter('prompt', i) as string;
         const modelParameters = this.getNodeParameter('modelParameters', i) as any;
-        const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
         const outputPropertyName = this.getNodeParameter('outputPropertyName', i) as string;
         const includeMetadata = advancedOptions.includeMetadata || false;
 
