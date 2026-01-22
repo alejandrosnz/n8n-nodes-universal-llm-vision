@@ -129,6 +129,7 @@ export interface ModelInfo {
   name: string;
   description?: string;
   releaseDate?: string;
+  provider?: string;
 }
 
 /**

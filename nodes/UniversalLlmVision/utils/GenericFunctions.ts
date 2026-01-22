@@ -234,10 +234,11 @@ export async function fetchAllVisionModels(
         const inputModalities = model.modalities?.input || [];
         if (inputModalities.includes('image')) {
           visionModels.push({
-            id: `${providerId}/${modelId}`,
+            id: modelId,
             name: `${providerName}: ${model.name || modelId}`,
             description: `$${model.cost?.input || 0} / $${model.cost?.output || 0} per 1M tokens`,
             releaseDate: model.release_date,
+            provider: providerId,
           });
         }
       }

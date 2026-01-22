@@ -178,13 +178,13 @@ describe('fetchAllVisionModels', () => {
 
     // Verify all returned models support image input
     const modelIds = result.map(m => m.id);
-    expect(modelIds).toContain('openai/gpt-4o');
-    expect(modelIds).toContain('openai/gpt-4-turbo');
-    expect(modelIds).toContain('openai/gpt-4o-mini');
-    expect(modelIds).toContain('anthropic/claude-3-5-sonnet-20241022');
+    expect(modelIds).toContain('gpt-4o');
+    expect(modelIds).toContain('gpt-4-turbo');
+    expect(modelIds).toContain('gpt-4o-mini');
+    expect(modelIds).toContain('claude-3-5-sonnet-20241022');
 
     // text-davinci-003 should NOT be included (no image support)
-    expect(modelIds).not.toContain('openai/text-davinci-003');
+    expect(modelIds).not.toContain('text-davinci-003');
   });
 
   it('should filter models by provider when providerFilter is provided', async () => {
@@ -202,13 +202,13 @@ describe('fetchAllVisionModels', () => {
     // gpt-4-turbo: 2024-04-09
     const modelIds = result.map(m => m.id);
     expect(modelIds).toEqual([
-      'openai/gpt-4o-mini',
-      'openai/gpt-4o',
-      'openai/gpt-4-turbo',
+      'gpt-4o-mini',
+      'gpt-4o',
+      'gpt-4-turbo',
     ]);
 
     // Should not include Anthropic models
-    expect(modelIds).not.toContain('anthropic/claude-3-5-sonnet-20241022');
+    expect(modelIds).not.toContain('claude-3-5-sonnet-20241022');
   });
 
   it('should filter models by Anthropic provider', async () => {
@@ -222,7 +222,7 @@ describe('fetchAllVisionModels', () => {
 
     // Verify all returned models are from Anthropic
     const modelIds = result.map(m => m.id);
-    expect(modelIds).toEqual(['anthropic/claude-3-5-sonnet-20241022']);
+    expect(modelIds).toEqual(['claude-3-5-sonnet-20241022']);
 
     // Should not include OpenAI models
     const openaiModels = modelIds.filter(m => m.includes('openai'));
@@ -235,7 +235,7 @@ describe('fetchAllVisionModels', () => {
     const result = await fetchAllVisionModels(mockHttpRequest);
 
     // Find the GPT-4o model
-    const gpt4o = result.find(m => m.id === 'openai/gpt-4o');
+    const gpt4o = result.find(m => m.id === 'gpt-4o');
 
     expect(gpt4o).toBeDefined();
     expect(gpt4o!.name).toBe('OpenAI: GPT-4o');
@@ -253,10 +253,10 @@ describe('fetchAllVisionModels', () => {
     // gpt-4o: 2024-05-13
     // claude-3-5-sonnet: 2024-10-22
 
-    expect(result[0].id).toBe('anthropic/claude-3-5-sonnet-20241022'); // 2024-10-22
-    expect(result[1].id).toBe('openai/gpt-4o-mini'); // 2024-07-18
-    expect(result[2].id).toBe('openai/gpt-4o'); // 2024-05-13
-    expect(result[3].id).toBe('openai/gpt-4-turbo'); // 2024-04-09
+    expect(result[0].id).toBe('claude-3-5-sonnet-20241022'); // 2024-10-22
+    expect(result[1].id).toBe('gpt-4o-mini'); // 2024-07-18
+    expect(result[2].id).toBe('gpt-4o'); // 2024-05-13
+    expect(result[3].id).toBe('gpt-4-turbo'); // 2024-04-09
   });
 
   it('should handle models without complete metadata', async () => {
@@ -282,7 +282,7 @@ describe('fetchAllVisionModels', () => {
     const result = await fetchAllVisionModels(mockHttpRequest);
 
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('test-provider/incomplete-model');
+    expect(result[0].id).toBe('incomplete-model');
     expect(result[0].description).toBe('$0 / $0 per 1M tokens');
   });
 
@@ -379,12 +379,13 @@ describe('fetchAllVisionModels', () => {
 
     const result = await fetchAllVisionModels(mockHttpRequest);
 
-    // Verify ID format is provider/model
+    // Verify ID format is just the model ID without provider prefix
+    // and provider field contains the provider name
     result.forEach(model => {
-      expect(model.id).toMatch(/^[^/]+\/[^/]+$/);
-      const [provider, modelId] = model.id.split('/');
-      expect(provider).toBeTruthy();
-      expect(modelId).toBeTruthy();
+      expect(model.id).toBeTruthy();
+      expect(model.id).not.toMatch(/^[a-z]+\//); // Should NOT start with provider/
+      expect(model.provider).toBeTruthy(); // Should have provider field
+      expect(typeof model.provider).toBe('string');
     });
   });
 });

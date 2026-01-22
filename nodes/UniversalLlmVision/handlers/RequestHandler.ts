@@ -20,7 +20,7 @@ export class RequestHandler {
    * @param apiKey - The API key for authentication
    * @param customBaseUrl - Optional custom base URL for the API
    * @param customHeaders - Additional custom headers to include
-   * @param model - The model identifier to use
+   * @param model - The model identifier to use (comes from models.dev in correct format)
    * @param preparedImage - The prepared image data
    * @param prompt - The text prompt for analysis
    * @param modelParameters - Optional model parameters (temperature, maxTokens, etc.)
@@ -40,6 +40,7 @@ export class RequestHandler {
     advancedOptions: any
   ): Promise<any> {
     // Build request options object with all parameters
+    // Model ID comes directly from models.dev and is already in the correct format for each provider
     const requestOptions = {
       provider,
       model,
