@@ -183,6 +183,50 @@ export function getProviderStrategy(providerName: string, customBaseUrl?: string
 }
 
 /**
+ * Sleep utility for retry backoff delays
+ * @param ms - Milliseconds to sleep
+ * @returns Promise that resolves after the specified delay
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Execute HTTP request with retry logic and exponential backoff
+ * @param httpRequest - HTTP request function
+ * @param requestOptions - Request configuration
+ * @param maxAttempts - Maximum number of attempts (default: 3)
+ * @returns Promise<any> - Response from successful request
+ */
+async function fetchWithRetry(
+  httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
+  requestOptions: IHttpRequestOptions,
+  maxAttempts: number = 3,
+): Promise<any> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await httpRequest(requestOptions);
+    } catch (error) {
+      lastError = error as Error;
+
+      // Don't retry on the last attempt
+      if (attempt === maxAttempts - 1) {
+        break;
+      }
+
+      // Exponential backoff: 1s, 2s
+      const delayMs = 1000 * (attempt + 1);
+      await sleep(delayMs);
+    }
+  }
+
+  // If all attempts failed, throw the last error
+  throw lastError || new Error('All retry attempts failed');
+}
+
+/**
  * Fetch all vision-capable models from models.dev API
  * @param httpRequest - HTTP request function
  * @param providerFilter - Optional provider ID to filter models from a specific provider
@@ -200,9 +244,11 @@ export async function fetchAllVisionModels(
         'Accept': 'application/json',
       },
       json: true,
+      timeout: 15000, // 15 second timeout
     };
 
-    const response = await httpRequest(requestOptions);
+    // Use retry logic with 3 attempts (initial + 2 retries)
+    const response = await fetchWithRetry(httpRequest, requestOptions, 3);
 
     // Handle invalid/null responses
     if (!response || typeof response !== 'object') {

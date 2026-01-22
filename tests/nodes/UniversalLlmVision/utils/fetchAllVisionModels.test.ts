@@ -171,6 +171,7 @@ describe('fetchAllVisionModels', () => {
         'Accept': 'application/json',
       },
       json: true,
+      timeout: 15000,
     });
 
     // Should return only models with image input support (4 models)
