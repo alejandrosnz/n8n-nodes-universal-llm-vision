@@ -86,12 +86,12 @@ To use a custom OpenAI-compatible API:
 
 #### Custom Provider
 
-When using a custom OpenAI-compatible API, you **must** provide the model ID in the **Manual Model ID** field (in Advanced Options). The automatic dropdown won't work for custom providers.
+When using a custom OpenAI-compatible API, the node will **automatically try to fetch available models** from your provider:
 
 1. Select "Custom Provider"
-2. Go to Advanced Options
-3. Fill in **Manual Model ID** with your provider's model identifier
-4. The node will use this ID for all requests
+2. Provide your API Key and Base URL (e.g., `https://your-api.com/v1`)
+3. The node will automatically load models from your API
+4. If it fails, use **Manual Model ID** in Advanced Options to specify the model ID directly
 
 ## Examples
 
