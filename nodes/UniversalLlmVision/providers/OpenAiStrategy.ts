@@ -4,7 +4,7 @@
  * (OpenRouter, Groq, Grok, Gemini)
  */
 
-import { BaseProviderStrategy, type ProviderRequestOptions } from './IProviderStrategy';
+import { BaseProviderStrategy, type ProviderRequestOptions, type ModelInfo } from './IProviderStrategy';
 
 export class OpenAiStrategy extends BaseProviderStrategy {
   name = 'openai';
@@ -102,6 +102,32 @@ export class OpenAiStrategy extends BaseProviderStrategy {
       finish_reason: response.choices?.[0]?.finish_reason,
     };
   }
+
+  getModelsEndpoint(): string {
+    return '/models';
+  }
+
+  filterVisionModels(models: any[]): any[] {
+    // Return all models - let user decide which to use
+    return models;
+  }
+
+  parseModelsResponse(response: any): ModelInfo[] {
+    const models = response.data || [];
+    
+    // Sort by creation date (newest first)
+    const sortedModels = [...models].sort((a: any, b: any) => {
+      const dateA = a.created || 0;
+      const dateB = b.created || 0;
+      return dateB - dateA; // Descending order (newest first)
+    });
+    
+    return sortedModels.map((model: any) => ({
+      id: model.id,
+      name: model.name || model.id,
+      description: model.id,
+    }));
+  }
 }
 
 export class OpenRouterStrategy extends OpenAiStrategy {
@@ -118,6 +144,38 @@ export class OpenRouterStrategy extends OpenAiStrategy {
       'HTTP-Referer': 'https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision',
       'X-Title': 'Universal LLM Vision n8n Node',
     };
+  }
+
+  getModelsEndpoint(): string {
+    return '/models';
+  }
+
+  filterVisionModels(models: any[]): any[] {
+    // OpenRouter has explicit vision capability in model metadata
+    return models.filter((model: any) => {
+      // Check if model supports multimodal/vision
+      const hasVision = model.architecture?.modality === 'multimodal' ||
+                       model.architecture?.modality?.includes('image') ||
+                       model.supported_parameters?.vision === true;
+      return hasVision;
+    });
+  }
+
+  parseModelsResponse(response: any): ModelInfo[] {
+    const models = response.data || [];
+    
+    // Sort models alphabetically by name for better UX
+    const sortedModels = [...models].sort((a: any, b: any) => {
+      const nameA = (a.name || a.id || '').toLowerCase();
+      const nameB = (b.name || b.id || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    
+    return sortedModels.map((model: any) => ({
+      id: model.id,
+      name: model.name || model.id,
+      description: model.id,
+    }));
   }
 }
 

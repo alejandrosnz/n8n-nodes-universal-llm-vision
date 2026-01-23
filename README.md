@@ -19,6 +19,7 @@ Install via n8n's community node interface:
 - ✅ Custom headers and advanced parameters
 - ✅ Comprehensive testing included
 - ✅ n8n Agents compatible
+- ✅ **Auto-discovery of all vision-capable models from the market** (powered by [models.dev](https://models.dev))
 
 ## Usage
 
@@ -42,16 +43,19 @@ Install via n8n's community node interface:
 
 ### Supported Models
 
-- GPT 5, GPT 4.1, GPT 4o, ... (OpenAI)
-- Claude 4.5 Sonnet & Haiku, ... (Anthropic)
-- Gemini 2.5 Flash Lite, Gemini 3.0 Flash, ... (Google)
-- Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL, ... (OpenRouter)
-- Llama 4 Maverick (Groq)
-- Grok 4.1 Fast (Grok/X.AI)
+The node automatically fetches and displays **all vision-capable models** from the market using the [models.dev](https://models.dev) API. Each model listing shows pricing and the exact model ID in parentheses (e.g., `$2.5 / $10 per 1M tokens (gpt-4o)`).
+
+The following models have been tested and verified to work:
+
+- **OpenAI**: GPT 5, GPT 4.1, GPT 4o, ...
+- **Google**: Gemini 2.5 Flash Lite, Gemini 3.0 Flash, ...
+- **OpenRouter**: Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL, ...
+- **Grok/X.AI**: Grok 4.1 Fast
 
 ### Available Operations
 
 - **Analyze Image**: Analyze images with custom prompts
+
 
 ### Configuration
 
@@ -63,28 +67,31 @@ Set up your API credentials:
 - **API Key**: Your provider's API key
 - **Base URL**: Custom API endpoint (optional, defaults provided)
 
-#### Custom Provider Configuration
+To use a custom OpenAI-compatible API:
+- Select "Custom Provider"
+- Provide your API Key and Base URL (e.g., `https://your-api.com/v1`)
+- Use **Manual Model ID** in Advanced Options to specify the model
 
-To use a custom OpenAI-compatible LLM vision API:
-
-- Select "Custom Provider" and provide your API Key
-- Set the Base URL (e.g., `https://your-api.com/v1`)
-
-**Requirements**: API must support `/chat/completions` with OpenAI-style requests/responses and Bearer auth.
-
-**Example**: Set Base URL to `https://my-vision-api.com/v1` and ensure vision support.
-
-**Troubleshooting**: Check API key and endpoint for auth issues; verify OpenAI compatibility for format errors.
 
 #### Node Parameters
 
-- **Model**: Model identifier (e.g., gpt-4o)
+- **Model**: Auto-populated dropdown with all vision-capable models from the market. Displays pricing and model ID in parentheses (e.g., `"$2.5 / $10 per 1M tokens (gpt-4o)"`). The model ID is what gets sent to the API.
 - **Image Source**: Binary Data, URL, or Base64
 - **Prompt**: Analysis prompt
 - **Image Detail**: Auto/Low/High resolution
 - **Model Parameters**: Temperature, Max Tokens, Top P
-- **Advanced Options**: System prompt, response format, custom headers
+- **Advanced Options**: System prompt, response format, custom headers, additional parameters
+- **Manual Model ID**: Specify a model ID manually (required for custom providers)
 - **Output**: Property name and metadata inclusion
+
+#### Custom Provider
+
+When using a custom OpenAI-compatible API, you **must** provide the model ID in the **Manual Model ID** field (in Advanced Options). The automatic dropdown won't work for custom providers.
+
+1. Select "Custom Provider"
+2. Go to Advanced Options
+3. Fill in **Manual Model ID** with your provider's model identifier
+4. The node will use this ID for all requests
 
 ## Examples
 

@@ -23,7 +23,7 @@ describe('UniversalLlmVision Node', () => {
     expect(node).toBeDefined();
     expect(node.description.displayName).toBe('Universal LLM Vision');
     expect(node.description.name).toBe('universalLlmVision');
-    expect(node.description.version).toBe(1);
+    expect(node.description.version).toEqual([1, 1.1]);
   });
 
   it('should have image source parameter with binary, url, and base64 options', () => {
@@ -812,6 +812,7 @@ describe('Integration Tests - Execute Method', () => {
       getCredentials: jest.fn(),
       getNodeParameter: jest.fn(),
       continueOnFail: jest.fn(),
+      getNode: jest.fn(() => ({ typeVersion: 1.1 })),
       helpers: {
         getBinaryDataBuffer: jest.fn(),
         request: jest.fn(),
@@ -976,11 +977,10 @@ describe('Integration Tests - Execute Method', () => {
     await expect(node.execute.call(mockExecuteFunctions)).rejects.toThrow('API rate limit exceeded');
   });
 
-  it('should fall back to generic credentials when OpenRouter credentials are unavailable', async () => {
-    // Mock getCredentials to reject for openRouterApi and resolve for genericLlmVisionApi
+  it('should use universal credentials successfully', async () => {
+    // Mock getCredentials to return universalLlmVisionApi credentials
     mockExecuteFunctions.getCredentials
-      .mockRejectedValueOnce(new Error('OpenRouter credentials not configured')) // First call for openRouterApi
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' }); // Second call for genericLlmVisionApi
+      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
@@ -1035,11 +1035,10 @@ describe('Integration Tests - Execute Method', () => {
     });
   });
 
-  it('should fall back to generic credentials when OpenRouter credentials are unavailable', async () => {
-    // Mock getCredentials to reject for openRouterApi and resolve for genericLlmVisionApi
+  it('should correctly read provider from universal credentials', async () => {
+    // Mock getCredentials to return universalLlmVisionApi credentials with provider field
     mockExecuteFunctions.getCredentials
-      .mockRejectedValueOnce(new Error('OpenRouter credentials not configured')) // First call for openRouterApi
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' }); // Second call for genericLlmVisionApi
+      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
@@ -1092,9 +1091,9 @@ describe('Integration Tests - Execute Method', () => {
       id: 1,
       analysis: 'A beautiful landscape'
     });
-    // Verify getCredentials was called twice: first for openRouterApi (rejected), then for universalLlmVisionApi (resolved)
-    expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('openRouterApi');
+    // Verify getCredentials was called only once for universalLlmVisionApi
     expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('universalLlmVisionApi');
+    expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledTimes(1);
   });
 });
 

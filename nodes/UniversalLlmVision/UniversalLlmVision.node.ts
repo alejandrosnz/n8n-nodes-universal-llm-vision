@@ -1,6 +1,8 @@
 import type {
   IExecuteFunctions,
+  ILoadOptionsFunctions,
   INodeExecutionData,
+  INodePropertyOptions,
   INodeType,
   INodeTypeDescription,
 } from 'n8n-workflow';
@@ -9,6 +11,7 @@ import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
 import { getMimeTypeOptions } from './processors/ImageProcessor';
 import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
+import { fetchAllVisionModels, detectCredentials } from './utils/GenericFunctions';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -16,7 +19,8 @@ export class UniversalLlmVision implements INodeType {
     name: 'universalLlmVision',
     icon: 'file:vision.svg',
     group: ['transform'],
-    version: 1,
+    version: [1, 1.1],
+    defaultVersion: 1.1,
     subtitle: '={{$parameter["model"] + " - " + $parameter["imageSource"]}}',
       description: 'Analyze images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic, Google Gemini)',
     defaults: {
@@ -31,14 +35,38 @@ export class UniversalLlmVision implements INodeType {
       },
     ],
     properties: [
+      // Version 1: Simple string input
       {
         displayName: 'Model',
         name: 'model',
         type: 'string',
+        displayOptions: {
+          show: {
+            '@version': [1],
+          },
+        },
         required: true,
-        default: 'gpt-5-mini',
-        placeholder: 'gpt-5-mini',
-        description: 'Model identifier for the selected provider (e.g., gpt-4-vision, claude-3-sonnet)',
+        default: '',
+        placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
+        description: 'Vision-capable model ID for the selected provider (e.g., gpt-4-vision-preview, claude-3-opus-20240229)',
+      },
+      // Version 1.1: Dynamic dropdown with auto-fetch
+      {
+        displayName: 'Model',
+        name: 'model',
+        type: 'options',
+        displayOptions: {
+          show: {
+            '@version': [1.1],
+          },
+        },
+        typeOptions: {
+          loadOptionsMethod: 'getModels',
+          allowCustomValue: true,
+        },
+        required: false,
+        default: '',
+        description: 'Vision-capable model for the selected provider. List is fetched automatically. To enter a model ID manually (e.g., for custom providers), use "Manual Model ID" in Advanced Options.',
       },
 
       // Image Input Configuration
@@ -203,6 +231,19 @@ export class UniversalLlmVision implements INodeType {
         default: {},
         options: [
           {
+            displayName: 'Manual Model ID',
+            name: 'manualModelId',
+            type: 'string',
+            default: '',
+            placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
+            description: 'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
+            displayOptions: {
+              show: {
+                '@version': [1.1],
+              },
+            },
+          },
+          {
             displayName: 'System Prompt',
             name: 'systemPrompt',
             type: 'string',
@@ -279,6 +320,59 @@ export class UniversalLlmVision implements INodeType {
     ],
   };
 
+  methods = {
+    loadOptions: {
+      /**
+       * Fetch available vision-capable models from models.dev API, filtered by provider
+       * @param this - The load options context provided by n8n
+       * @returns Promise<INodePropertyOptions[]> - Array of model options
+       */
+      async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        try {
+          // Detect configured credentials to get the selected provider
+          const credInfo = await detectCredentials(
+            (type: string) => this.getCredentials(type),
+          );
+
+          const { provider } = credInfo;
+
+          // Fetch vision-capable models, filtered by the selected provider
+          const models = await fetchAllVisionModels(
+            this.helpers.httpRequest,
+            provider,
+          );
+
+          // Check if model list is empty (common with custom providers)
+          if (models.length === 0) {
+            return [
+              {
+                name: '⚠️ No models found for this provider',
+                value: '',
+                description: 'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)',
+              },
+            ];
+          }
+
+          // Convert to INodePropertyOptions format
+          return models.map((model) => ({
+            name: model.name,
+            value: model.id,
+            description: model.description,
+          }));
+        } catch (error) {
+          // Return error message as option if fetching fails
+          return [
+            {
+              name: '⚠️ Error loading models from models.dev',
+              value: '',
+              description: `${(error as Error).message}. Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)`,
+            },
+          ];
+        }
+      },
+    },
+  };
+
   /**
    * Execute the Universal LLM Vision node
    * Processes images through various LLM vision providers (OpenAI, Anthropic, Groq, etc.)
@@ -290,36 +384,33 @@ export class UniversalLlmVision implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
 
-    // Detect which credential is being used and get the appropriate one
-    // First try OpenRouter credential, then fall back to universal credential
-    let credentials: any;
-    let credentialName: string;
-    let apiKey: string;
-    let customBaseUrl: string | undefined;
-    let provider: string;
+    // Detect configured credentials
+    const credInfo = await detectCredentials(
+      (type: string) => this.getCredentials(type),
+    );
 
-    try {
-      credentials = await this.getCredentials('openRouterApi');
-      credentialName = 'openRouterApi';
-      provider = 'openrouter';
-      apiKey = credentials.apiKey as string;
-    } catch {
-      // OpenRouter credential not configured, try universal credential
-      credentials = await this.getCredentials('universalLlmVisionApi');
-      credentialName = 'universalLlmVisionApi';
-      provider = (credentials.provider as string) || 'openai';
-      apiKey = credentials.apiKey as string;
-      customBaseUrl = (credentials.baseUrl as string) || undefined;
-    }
+    const { credentials, credentialName, provider, apiKey, customBaseUrl } = credInfo;
 
     // Process each input item
     for (let i = 0; i < items.length; i++) {
       try {
         // Extract node parameters for this item
-        const model = this.getNodeParameter('model', i) as string;
+        const nodeVersion = this.getNode().typeVersion;
+        const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
+        const manualModelId = nodeVersion >= 1.1 ? (advancedOptions.manualModelId as string || '').trim() : '';
+        
+        // Prioritize manual model ID if provided (v1.1+), otherwise use model from parameter
+        const model = manualModelId !== '' 
+          ? manualModelId
+          : (this.getNodeParameter('model', i, '') as string);
+        
+        // Validate model ID is provided
+        if (!model || model.trim() === '') {
+          throw new Error('Model is required. Please select a model from the dropdown or specify a "Manual Model ID" in Advanced Options.');
+        }
+        
         const prompt = this.getNodeParameter('prompt', i) as string;
         const modelParameters = this.getNodeParameter('modelParameters', i) as any;
-        const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
         const outputPropertyName = this.getNodeParameter('outputPropertyName', i) as string;
         const includeMetadata = advancedOptions.includeMetadata || false;
 
