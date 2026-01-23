@@ -107,11 +107,6 @@ export class OpenAiStrategy extends BaseProviderStrategy {
     return '/models';
   }
 
-  filterVisionModels(models: any[]): any[] {
-    // Return all models - let user decide which to use
-    return models;
-  }
-
   parseModelsResponse(response: any): ModelInfo[] {
     const models = response.data || [];
     
@@ -122,9 +117,10 @@ export class OpenAiStrategy extends BaseProviderStrategy {
       return dateB - dateA; // Descending order (newest first)
     });
     
+    // Return only model IDs - no filtering or additional metadata
     return sortedModels.map((model: any) => ({
       id: model.id,
-      name: model.name || model.id,
+      name: model.id,
       description: model.id,
     }));
   }
@@ -150,30 +146,20 @@ export class OpenRouterStrategy extends OpenAiStrategy {
     return '/models';
   }
 
-  filterVisionModels(models: any[]): any[] {
-    // OpenRouter has explicit vision capability in model metadata
-    return models.filter((model: any) => {
-      // Check if model supports multimodal/vision
-      const hasVision = model.architecture?.modality === 'multimodal' ||
-                       model.architecture?.modality?.includes('image') ||
-                       model.supported_parameters?.vision === true;
-      return hasVision;
-    });
-  }
-
   parseModelsResponse(response: any): ModelInfo[] {
     const models = response.data || [];
     
     // Sort models alphabetically by name for better UX
     const sortedModels = [...models].sort((a: any, b: any) => {
-      const nameA = (a.name || a.id || '').toLowerCase();
-      const nameB = (b.name || b.id || '').toLowerCase();
+      const nameA = (a.id || '').toLowerCase();
+      const nameB = (b.id || '').toLowerCase();
       return nameA.localeCompare(nameB);
     });
     
+    // Return only model IDs - no filtering or additional metadata
     return sortedModels.map((model: any) => ({
       id: model.id,
-      name: model.name || model.id,
+      name: model.id,
       description: model.id,
     }));
   }

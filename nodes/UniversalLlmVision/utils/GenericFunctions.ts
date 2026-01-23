@@ -354,18 +354,8 @@ export async function fetchProviderModels(
 
     const response = await httpRequest(requestOptions);
 
-    // Parse response using strategy
+    // Parse response using strategy - returns only model IDs, no filtering
     const parsedModels = strategy.parseModelsResponse(response);
-
-    // Filter for vision-capable models if supported
-    if (strategy.filterVisionModels) {
-      // Filter already parsed models (they have ModelInfo format)
-      const rawModels = response.data || response || [];
-      const filteredRaw = strategy.filterVisionModels(rawModels);
-      return strategy.parseModelsResponse(
-        response.data ? { data: filteredRaw } : filteredRaw
-      );
-    }
 
     return parsedModels;
   } catch (error) {
