@@ -204,6 +204,101 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       expect(result?.[0].description).toContain('Manual Model ID');
     });
 
+    describe('Custom Provider Model Fetching', () => {
+      it('should successfully fetch models from custom provider /models endpoint', async () => {
+        // Mock OpenAI-compatible /models response
+        const mockModelsResponse = {
+          data: [
+            {
+              id: 'llama-3-70b-vision',
+              object: 'model',
+              created: 1709856000,
+              owned_by: 'custom',
+            },
+            {
+              id: 'gpt-4-vision',
+              object: 'model',
+              created: 1699488000,
+              owned_by: 'custom',
+            },
+          ],
+        };
+
+        const mockLoadOptionsFunctions: Partial<ILoadOptionsFunctions> = {
+          getCredentials: jest.fn().mockResolvedValue({
+            provider: 'custom',
+            apiKey: 'test-custom-key',
+            baseUrl: 'https://custom.api.com/v1',
+          }),
+          helpers: {
+            httpRequest: jest.fn().mockResolvedValue(mockModelsResponse),
+          } as any,
+        };
+
+        const result = await node.methods?.loadOptions?.getModels?.call(
+          mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        );
+
+        // Should return models from custom provider
+        expect(result).toHaveLength(2);
+        expect(result?.[0].value).toBe('llama-3-70b-vision');
+        expect(result?.[1].value).toBe('gpt-4-vision');
+        expect(mockLoadOptionsFunctions.helpers?.httpRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            method: 'GET',
+            url: expect.stringContaining('/models'),
+            timeout: 10000,
+          }),
+        );
+      });
+
+      it('should show error message when custom provider /models endpoint fails', async () => {
+        const mockLoadOptionsFunctions: Partial<ILoadOptionsFunctions> = {
+          getCredentials: jest.fn().mockResolvedValue({
+            provider: 'custom',
+            apiKey: 'test-custom-key',
+            baseUrl: 'https://custom.api.com/v1',
+          }),
+          helpers: {
+            httpRequest: jest.fn().mockRejectedValue(new Error('Network timeout')),
+          } as any,
+        };
+
+        const result = await node.methods?.loadOptions?.getModels?.call(
+          mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        );
+
+        // Should return error message with Manual Model ID instruction
+        expect(result).toHaveLength(1);
+        expect(result?.[0].name).toContain('Could not fetch models from custom provider');
+        expect(result?.[0].value).toBe('');
+        expect(result?.[0].description).toContain('Manual Model ID');
+        expect(result?.[0].description).toContain('Network timeout');
+      });
+
+      it('should handle custom provider with invalid response structure', async () => {
+        const mockLoadOptionsFunctions: Partial<ILoadOptionsFunctions> = {
+          getCredentials: jest.fn().mockResolvedValue({
+            provider: 'custom',
+            apiKey: 'test-custom-key',
+            baseUrl: 'https://custom.api.com/v1',
+          }),
+          helpers: {
+            httpRequest: jest.fn().mockResolvedValue({ invalid: 'response' }), // Invalid structure
+          } as any,
+        };
+
+        const result = await node.methods?.loadOptions?.getModels?.call(
+          mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        );
+
+        // Should return error or empty models message
+        expect(result).toHaveLength(1);
+        expect(result?.[0].value).toBe('');
+        expect(result?.[0].description).toContain('Manual Model ID');
+      });
+    });
+
     it('should handle malformed JSON response from models.dev', async () => {
       const mockLoadOptionsFunctions: Partial<ILoadOptionsFunctions> = {
         getCredentials: jest.fn().mockResolvedValue({

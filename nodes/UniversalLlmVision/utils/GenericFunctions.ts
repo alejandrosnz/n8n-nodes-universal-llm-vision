@@ -349,6 +349,7 @@ export async function fetchProviderModels(
       url,
       headers,
       json: true,
+      timeout: 10000, // 10 second timeout for custom providers
     };
 
     const response = await httpRequest(requestOptions);

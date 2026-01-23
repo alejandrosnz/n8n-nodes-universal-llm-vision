@@ -11,7 +11,8 @@ import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
 import { getMimeTypeOptions } from './processors/ImageProcessor';
 import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
-import { fetchAllVisionModels, detectCredentials } from './utils/GenericFunctions';
+import { detectCredentials } from './utils/GenericFunctions';
+import { loadModelsForDropdown } from './utils/ModelLoader';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -323,7 +324,7 @@ export class UniversalLlmVision implements INodeType {
   methods = {
     loadOptions: {
       /**
-       * Fetch available vision-capable models from models.dev API, filtered by provider
+       * Fetch available vision-capable models from models.dev API or provider API
        * @param this - The load options context provided by n8n
        * @returns Promise<INodePropertyOptions[]> - Array of model options
        */
@@ -334,38 +335,15 @@ export class UniversalLlmVision implements INodeType {
             (type: string) => this.getCredentials(type),
           );
 
-          const { provider } = credInfo;
-
-          // Fetch vision-capable models, filtered by the selected provider
-          const models = await fetchAllVisionModels(
-            this.helpers.httpRequest,
-            provider,
-          );
-
-          // Check if model list is empty (common with custom providers)
-          if (models.length === 0) {
-            return [
-              {
-                name: '⚠️ No models found for this provider',
-                value: '',
-                description: 'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)',
-              },
-            ];
-          }
-
-          // Convert to INodePropertyOptions format
-          return models.map((model) => ({
-            name: model.name,
-            value: model.id,
-            description: model.description,
-          }));
+          // Load models based on provider type (custom provider API or models.dev)
+          return loadModelsForDropdown(credInfo, this.helpers.httpRequest);
         } catch (error) {
-          // Return error message as option if fetching fails
+          // Return error message if credential detection or loading fails
           return [
             {
-              name: '⚠️ Error loading models from models.dev',
+              name: '⚠️ Error loading models',
               value: '',
-              description: `${(error as Error).message}. Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)`,
+              description: `${(error as Error).message}. Add "Manual Model ID" in Advanced Options and enter the model ID directly.`,
             },
           ];
         }
