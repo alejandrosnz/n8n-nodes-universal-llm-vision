@@ -6,10 +6,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        80
+        -384,
+        1104
       ],
-      "id": "a7cfa90a-bf27-49a0-a646-4a345b61e22e",
+      "id": "4da32746-2b94-49d8-871e-799bce6fc12a",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -20,10 +20,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        448,
-        176
+        64,
+        1200
       ],
-      "id": "b0b4aff1-f1ce-446f-8fd4-b4731b1913a7",
+      "id": "9c2ab66f-1815-41ad-9793-ab5766492ffc",
       "name": "HTTP Request"
     },
     {
@@ -43,10 +43,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        224,
-        80
+        -160,
+        1104
       ],
-      "id": "79fc2bd4-93e9-484b-b14d-62432807e319",
+      "id": "33654b94-3400-4e86-83f5-d05a6c6e291c",
       "name": "Edit Fields"
     },
     {
@@ -56,76 +56,76 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        672,
-        272
+        288,
+        1296
       ],
-      "id": "33942f35-c225-40c5-b234-6283520778e0",
+      "id": "db55cf01-a039-47aa-aa9f-fd970cd2f608",
       "name": "Binary to Base64"
     },
     {
       "parameters": {
-        "model": "google/gemini-2.0-flash-lite-001",
+        "model": "google/gemini-2.5-flash-lite",
         "imageSource": "url",
         "imageUrl": "={{ $json.sample_image }}",
         "modelParameters": {},
         "advancedOptions": {}
       },
-      "type": "CUSTOM.universalLlmVision",
-      "typeVersion": 1,
+      "type": "n8n-nodes-universal-llm-vision.universalLlmVision",
+      "typeVersion": 1.1,
       "position": [
-        448,
-        -16
+        64,
+        1008
       ],
-      "id": "58c19ba4-f880-4b46-960e-57a71cbd6486",
+      "id": "7b5b77c0-5898-44d1-8cd5-cfe4bec13cb5",
       "name": "Universal LLM Vision (URL)",
       "credentials": {
         "universalLlmVisionApi": {
-          "id": "I8oGRkKW1GlKbhWT",
-          "name": "Universal LLM Vision - openrouter"
+          "id": "Bp6VDEeZUbnt7uU1",
+          "name": "Universal LLM Vision - OpenRouter"
         }
       }
     },
     {
       "parameters": {
-        "model": "google/gemini-2.0-flash-lite-001",
+        "model": "google/gemini-2.5-flash-lite",
         "modelParameters": {},
         "advancedOptions": {}
       },
-      "type": "CUSTOM.universalLlmVision",
-      "typeVersion": 1,
+      "type": "n8n-nodes-universal-llm-vision.universalLlmVision",
+      "typeVersion": 1.1,
       "position": [
-        672,
-        80
+        288,
+        1104
       ],
-      "id": "7bb41bbe-1546-439b-bf9b-9811163dc9e0",
+      "id": "fe8d1ff6-1ea6-43a6-8c43-eaf82ad2971e",
       "name": "Universal LLM Vision (BINARY)",
       "credentials": {
         "universalLlmVisionApi": {
-          "id": "I8oGRkKW1GlKbhWT",
-          "name": "Universal LLM Vision - openrouter"
+          "id": "Bp6VDEeZUbnt7uU1",
+          "name": "Universal LLM Vision - OpenRouter"
         }
       }
     },
     {
       "parameters": {
-        "model": "google/gemini-2.0-flash-lite-001",
+        "model": "google/gemini-2.5-flash-lite",
         "imageSource": "base64",
         "base64Data": "={{ $json.base64 }}",
         "modelParameters": {},
         "advancedOptions": {}
       },
-      "type": "CUSTOM.universalLlmVision",
-      "typeVersion": 1,
+      "type": "n8n-nodes-universal-llm-vision.universalLlmVision",
+      "typeVersion": 1.1,
       "position": [
-        896,
-        272
+        512,
+        1296
       ],
-      "id": "d9e84ea5-12ce-4fec-b8de-6d06461e91db",
+      "id": "811e9bbb-50cc-45ac-af94-f6c27391bf77",
       "name": "Universal LLM Vision (BASE 64)",
       "credentials": {
         "universalLlmVisionApi": {
-          "id": "I8oGRkKW1GlKbhWT",
-          "name": "Universal LLM Vision - openrouter"
+          "id": "Bp6VDEeZUbnt7uU1",
+          "name": "Universal LLM Vision - OpenRouter"
         }
       }
     }
@@ -192,11 +192,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "aee85d5b-695f-4c20-8904-ca517c26679f",
+  "versionId": "725d8811-7333-4d67-b94b-8a8f9d2089ed",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "de418e501bf89674ab9c4074f5c315fac72e6a5e9a84ca669315e1a91d4a9ee6"
+    "instanceId": "ad60bc00ef372218dfa03c55129b4359826a8a6d6771e92e9468ffc9009f87f8"
   },
-  "id": "cWzuHcUdIXYL2vXSYSw1y",
+  "id": "Ob9A-CkSopOZQQtpuWavN",
   "tags": []
 }
