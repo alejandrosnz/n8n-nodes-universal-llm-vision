@@ -128,6 +128,80 @@
           "name": "Universal LLM Vision - OpenRouter"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -384,
+        1344
+      ],
+      "id": "6cf85466-3349-4095-aafd-00de42ced6d0",
+      "name": "When chat message received",
+      "webhookId": "6d4e4687-4c3f-41db-8887-550eaf30e8a0"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a multimodal analysis agent.\nTo analyze images, you require a publicly accessible image URL.\nWhen an image is provided, call the Universal_LLM_Vision tool using the public image URL and a short, task-focused prompt.\nFollow the user instructions precisely and avoid assumptions not supported by the image.\nRespond clearly, concisely, and in a useful format."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -176,
+        1344
+      ],
+      "id": "2ccc25a5-853a-4e00-993c-fd22b305a59b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-nano",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        1552
+      ],
+      "id": "3e2d73e7-bde7-4912-aff7-c6f4123412f7",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "WKMEjAgrYCTBBx2B",
+          "name": "OpenRouter - n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Analyze images using a LLM",
+        "model": "google/gemini-2.5-flash-lite",
+        "imageSource": "url",
+        "imageUrl": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Image_URL', ``, 'string') }}",
+        "prompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt', ``, 'string') }}",
+        "modelParameters": {},
+        "advancedOptions": {}
+      },
+      "type": "n8n-nodes-universal-llm-vision.universalLlmVisionTool",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        1552
+      ],
+      "id": "0cb4bedb-9083-40f4-a4d4-aca9cfbcd148",
+      "name": "Universal LLM Vision",
+      "credentials": {
+        "universalLlmVisionApi": {
+          "id": "Bp6VDEeZUbnt7uU1",
+          "name": "Universal LLM Vision - OpenRouter"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -185,6 +259,39 @@
           }
         ]
       ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Universal LLM Vision": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -192,7 +299,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "725d8811-7333-4d67-b94b-8a8f9d2089ed",
+  "versionId": "c3adcb63-0711-4540-bd49-30b8fc3b7af8",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ad60bc00ef372218dfa03c55129b4359826a8a6d6771e92e9468ffc9009f87f8"
