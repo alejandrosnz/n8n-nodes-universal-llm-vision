@@ -14,7 +14,7 @@ import { fetchAllVisionModels, fetchProviderModels } from './GenericFunctions';
 const NO_MODELS_OPTION: INodePropertyOptions = {
   name: '⚠️ No models found for this provider',
   value: '',
-  description: 'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)',
+  description: 'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-5-nano, gemini-3.0-flash)',
 };
 
 /**
@@ -24,7 +24,7 @@ function getModelsDevErrorOption(error: Error): INodePropertyOptions {
   return {
     name: '⚠️ Error loading models from models.dev',
     value: '',
-    description: `${error.message}. Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-4-vision, claude-3-opus)`,
+    description: `${error.message}. Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-5-nano, gemini-3.0-flash)`,
   };
 }
 
@@ -35,7 +35,7 @@ function getCustomProviderErrorOption(error: Error): INodePropertyOptions {
   return {
     name: '⚠️ Could not fetch models from custom provider',
     value: '',
-    description: `${error.message}. Use "Manual Model ID" in Advanced Options to enter the model ID directly (e.g., gpt-4-vision-preview).`,
+    description: `${error.message}. Use "Manual Model ID" in Advanced Options to enter the model ID directly (e.g., gpt-5-nano).`,
   };
 }
 

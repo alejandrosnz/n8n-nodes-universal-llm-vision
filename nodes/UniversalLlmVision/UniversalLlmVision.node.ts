@@ -29,6 +29,7 @@ export class UniversalLlmVision implements INodeType {
     },
     inputs: ['main'],
     outputs: ['main'],
+    usableAsTool: true,
     credentials: [
       {
         name: 'universalLlmVisionApi',
@@ -48,8 +49,8 @@ export class UniversalLlmVision implements INodeType {
         },
         required: true,
         default: '',
-        placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
-        description: 'Vision-capable model ID for the selected provider (e.g., gpt-4-vision-preview, claude-3-opus-20240229)',
+        placeholder: 'e.g., gpt-5-nano, gemini-3.0-flash',
+        description: 'Vision-capable model ID for the selected provider (e.g., gpt-5-nano, gemini-3.0-flash)',
       },
       // Version 1.1: Dynamic dropdown with auto-fetch
       {
@@ -236,7 +237,7 @@ export class UniversalLlmVision implements INodeType {
             name: 'manualModelId',
             type: 'string',
             default: '',
-            placeholder: 'e.g., gpt-4-vision-preview, claude-3-opus-20240229',
+            placeholder: 'e.g., gpt-5-nano, gemini-3.0-flash',
             description: 'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
             displayOptions: {
               show: {
