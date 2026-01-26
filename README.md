@@ -2,38 +2,6 @@
 
 **Add vision capabilities to your n8n workflows** - Analyze images with AI using any LLM provider, with flexible integration options for every use case.
 
-This package provides **two complementary nodes** that give you vision capabilities in n8n:
-
-- 🎯 **Universal LLM Vision** - Direct API integration with 300+ vision models, auto-discovery, and full parameter control
-- 🔗 **Vision Chain** - Langchain-compatible chain that adds vision to any n8n chat model, perfect for AI agents
-
-Choose the approach that fits your workflow: standalone for power users, or langchain integration for AI agent workflows.
-
-## Why This Package?
-
-### 🚀 Two Powerful Approaches to Vision AI
-
-**Most n8n vision solutions lock you into one approach.** This package gives you flexibility:
-
-1. **Universal LLM Vision** node - For when you need maximum control:
-   - Access to 300+ vision models from 20+ providers (auto-discovered from [models.dev](https://models.dev))
-   - Direct API control with custom headers, parameters, and response formats
-   - Works with custom/proprietary endpoints
-   - Detailed metadata output (tokens, usage, costs)
-   - Perfect for production workflows with specific requirements
-   - Use it in AI Agents as a Vision Tool
-
-2. **Vision Chain** - For seamless langchain integration:
-   - Connect to any n8n chat model (OpenAI, Anthropic, OpenRouter, etc.)
-   - Native langchain chain pattern for AI agent workflows
-   - Credentials managed at the chat model level
-   - Swap models without reconfiguring
-   - Perfect for rapid prototyping and AI agent development
-
-**Both nodes:**
-- ✅ Support binary data, URLs, and base64 images
-- ✅ Configurable system prompts with intelligent defaults
-
 ## Installation
 
 Install via n8n's community node interface:
@@ -44,48 +12,44 @@ Install via n8n's community node interface:
 
 Both nodes will be available in your node palette under the **"AI"** category.
 
-## Which Node Should I Use?
+## Choose Your Approach
 
-### Use **Vision Chain** when:
-- ✅ You want to use n8n's builtin chat model nodes (OpenAI, Anthropic, OpenRouter, etc.)
-- ✅ You prefer managing credentials at the chat model level
-- ✅ You only need basic vision features (image analysis with prompts)
+This package provides **two nodes** with different integration approaches:
 
-### Use **Universal LLM Vision** when:
-- ✅ You need direct API control with custom headers and additional parameters
-- ✅ You're working with custom/proprietary LLM endpoints
-- ✅ You need the vision compatible-model auto-fetch feature
-- ✅ You need to use in an AI Agent as a tool
+### 🎯 Universal LLM Vision
+
+**Custom credentials node** - Connect to any OpenAI-compatible vision API with your own credentials.
+
+- ✅ **Any custom provider**: Configure your own API endpoints and credentials
+- ✅ **Vision model discovery**: Auto-fetch vision-capable models from [models.dev](https://models.dev) with pricing
+- ✅ **Full API control**: Custom headers, parameters, JSON response format
+- ✅ **Rich metadata**: Token usage, costs, and model info in output
+- ✅ **AI Agent ready**: Use as a tool in AI Agent workflows
+
+**Best for:** Production workflows, custom APIs, full parameter control
+
+### 🔗 Vision Chain
+
+**Langchain integration node** - Reuse your existing n8n chat model connections (OpenAI, Anthropic, OpenRouter, etc.).
+
+- ✅ **Reuse chat models**: Connect any n8n chat model node you already have configured
+- ✅ **Simpler setup**: No need to duplicate credentials
+- ✅ **Quick switching**: Change models by swapping the connected chat model node
+- ✅ **Langchain native**: Seamless integration with AI Agent chains
+
+**Best for:** AI agents, rapid prototyping, when you already have chat models configured
+
+### Important Note
+
+**Both nodes only work with vision-capable models.** Regular text-only models are not supported. Most modern multimodal models from OpenAI (GPT-4o), Anthropic (Claude Sonnet), Google (Gemini), and OpenRouter support vision.
+
+**Common features:**
+- Binary data, URL, and base64 image sources
+- Customizable prompts with intelligent defaults
+- Auto/Low/High detail control for cost optimization
+- Production-ready with 241 tests
 
 📖 **[Read the detailed comparison in the Vision Chain documentation](docs/VISION_CHAIN.md)**
-
-## Features
-
-### Universal LLM Vision
-
-- **300+ Vision Models**: Auto-discovery from [models.dev](https://models.dev) with pricing displayed
-- **AI Agent Ready**: Works seamlessly with n8n AI Agent nodes
-- **Full API Control**: Custom headers, additional parameters, response format (JSON mode)
-- **Rich Metadata**: Usage stats, token counts, model info in output
-- **Provider Support**: OpenAI, Anthropic, Google Gemini, OpenRouter, Groq, Grok, Custom APIs
-- **Custom Endpoints**: Works with any OpenAI-compatible API
-- **System Prompts**: Intelligent defaults for image analysis, fully customizable
-- **Output Control**: Configurable property names, original data preservation
-
-### Vision Chain
-
-- **Langchain Native**: True chain node pattern for n8n's AI ecosystem
-- **Flexible Models**: Connect any n8n chat model (swap models without reconfiguring)
-- **Simple Setup**: No credential duplication, managed at chat model level
-- **Smart Defaults**: Comprehensive system prompt for image understanding
-
-### Common Features
-
-- **Multiple Image Sources**: Binary data (uploaded files), public URLs, base64 strings
-- **Detail Control**: Auto/Low/High resolution for cost/quality balance
-- **Smart Prompts**: Customizable prompts for any image analysis task
-- **Production Ready**: Comprehensive test coverage (241 tests)
-- **Data Pass-through**: Preserves all original input data
 
 ## Quick Start
 
@@ -111,7 +75,7 @@ For production workflows with specific requirements:
 
 1. Add **Universal LLM Vision** node
 2. Configure credentials (provider + API key)
-3. Select model from 300+ options
+3. Select from available vision models
 4. Configure image source and prompt
 5. Customize parameters, headers, system prompt as needed
 6. Done! ✨
@@ -124,29 +88,23 @@ For production workflows with specific requirements:
 
 ## Use Cases
 
-### 🔍 Image Analysis
-- Product catalog descriptions
-- Visual quality inspection
-- Scene understanding
-- Object detection and counting
+**Universal LLM Vision** - Best for:
+- 🏭 **Production pipelines**: Batch image processing with metadata tracking
+- 📊 **Custom APIs**: Integration with proprietary vision models
+- 🔍 **Structured extraction**: OCR with JSON mode for invoices, receipts, forms
+- 🎯 **Full control workflows**: Custom headers, parameters, response formats
 
-### 📝 Document Processing
-- OCR (text extraction from images)
-- Invoice/receipt parsing
-- Handwriting recognition
-- Form data extraction
+**Vision Chain** - Best for:
+- 🤖 **AI Agents**: Customer support bots, visual Q&A assistants
+- ⚡ **Rapid prototyping**: Quick model testing and switching
+- 🔄 **Dynamic workflows**: Model selection based on conditions
+- 🔗 **Multi-step analysis**: Chaining different models for specialized tasks
 
-### 🏥 Specialized Analysis
-- Medical image assessment
-- Architectural plan review
-- Fashion/style analysis
-- Art and design critique
-
-### 🤖 AI Agents with Vision
-- Customer support bots that understand images
-- Visual Q&A assistants
-- Image-based workflow automation
-- Multimodal conversational agents
+**Both nodes** - Common uses:
+- Product catalog descriptions and quality inspection
+- Document processing (text extraction, handwriting recognition)
+- Specialized analysis (medical, architectural, fashion)
+- Scene understanding and object detection
 
 ## Detailed Configuration
 
@@ -158,10 +116,10 @@ For production workflows with specific requirements:
 - OpenAI (GPT-4o, GPT-4 Turbo with Vision)
 - Google Gemini (Flash, Pro Vision)
 - Anthropic (Claude Sonnet, Opus with Vision)
-- OpenRouter (300+ models from multiple providers)
+- OpenRouter (vision models from multiple providers)
 - Groq (Llama Vision, Mixtral Vision)
 - Grok/X.AI (Grok Vision)
-- Custom (any OpenAI-compatible API)
+- Custom (any OpenAI-compatible vision API)
 
 **Model Selection:**
 The node auto-fetches all vision-capable models from [models.dev](https://models.dev), displaying:
@@ -287,27 +245,6 @@ Download File → Vision Chain (describe) → Vision Chain (extract text) → Pr
 ```
 Perfect for: Multi-step analysis, combining different model strengths
 
-
-## Why Choose This Package?
-
-### 🎯 Flexibility First
-Other vision packages lock you into one provider or pattern. This gives you **two powerful approaches** for different use cases.
-
-### 🌐 Most Models Available
-With **300+ auto-discovered models** from models.dev, you have access to more vision models than any other n8n package.
-
-### 🔧 Production Ready
-- **241 passing tests** with comprehensive coverage
-- Intelligent error handling and validation
-- Battle-tested in real workflows
-- Active maintenance and updates
-
-### 🤖 AI Agent Native
-Both nodes work seamlessly with n8n's AI Agent ecosystem, making multimodal agent workflows simple.
-
-### 📊 Transparent Pricing
-Model selection shows pricing upfront, so you know costs before you run.
-
 ## Development & Contributing
 
 This package is built using the [n8n-community-node-starter](https://github.com/alejandrosnz/n8n-community-node-starter) boilerplate, providing:
@@ -317,12 +254,14 @@ This package is built using the [n8n-community-node-starter](https://github.com/
 - CI/CD pipelines
 - AI-assisted development tools
 
+Contributions are welcome! Feel free to:
+- 🐛 **Report bugs** by opening an issue
+- 💡 **Suggest features** or improvements
+- 🔧 **Submit pull requests** with fixes or enhancements
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
----
 
 ## Links
 
