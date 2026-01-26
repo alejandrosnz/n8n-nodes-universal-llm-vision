@@ -6,7 +6,19 @@ import type {
 } from 'n8n-workflow';
 import { HumanMessage } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { prepareImage } from './processors/ImageProcessor';
+import {
+	DEFAULT_VISION_SYSTEM_PROMPT,
+	DEFAULT_OUTPUT_PROPERTY,
+	DEFAULT_ANALYSIS_PROMPT,
+	ERROR_MESSAGES,
+} from './constants/visionChainDefaults';
+import {
+	processBinaryImage,
+	processUrlImage,
+	processBase64Image,
+	buildMessageContent,
+	extractResponseText,
+} from './utils/visionChainHelpers';
 
 /**
  * Vision Chain Node
@@ -145,7 +157,7 @@ export class VisionChain implements INodeType {
 				type: 'string',
 				typeOptions: { rows: 4 },
 				required: true,
-				default: 'Analyze this image and describe what you see',
+				default: DEFAULT_ANALYSIS_PROMPT,
 				description: 'Question or instruction for analyzing the image',
 				placeholder: 'Describe the main objects, colors, and any text visible in this image',
 			},
@@ -155,7 +167,7 @@ export class VisionChain implements INodeType {
 				displayName: 'Output Property Name',
 				name: 'outputPropertyName',
 				type: 'string',
-				default: 'analysis',
+				default: DEFAULT_OUTPUT_PROPERTY,
 				description: 'Property name for storing the analysis result',
 			},
 
@@ -196,7 +208,7 @@ export class VisionChain implements INodeType {
 						name: 'systemPrompt',
 						type: 'string',
 						typeOptions: { rows: 8 },
-						default: 'You are an AI assistant specialized in image understanding and visual analysis.\n\nRules:\n- Use only information clearly visible in the image\n- Never guess or assume information that cannot be visually confirmed\n- If unable to answer fully, explain what\'s missing\n- Be concise, factual, and neutral by default\n\nAdapt your response to the user\'s request:\n- Text extraction → reproduce exactly as seen\n- Description → summarize visible elements\n- Unanswerable questions → state this explicitly',
+						default: DEFAULT_VISION_SYSTEM_PROMPT,
 						description: 'System instructions for the model (overrides defaults)',
 					},
 				],
@@ -215,132 +227,101 @@ export class VisionChain implements INodeType {
 		)) as BaseChatModel;
 
 		if (!model) {
-			throw new Error('No chat model connected. Please connect a chat model to the Vision Chain node.');
+			throw new Error(ERROR_MESSAGES.NO_CHAT_MODEL);
 		}
 
 		// Process each input item
 		for (let i = 0; i < items.length; i++) {
 			try {
-				const imageSource = this.getNodeParameter('imageSource', i) as 'binary' | 'url' | 'base64';
-				const prompt = this.getNodeParameter('prompt', i) as string;
-				const outputPropertyName = this.getNodeParameter('outputPropertyName', i) as string;
-				const options = this.getNodeParameter('options', i, {}) as {
-					imageDetail?: 'auto' | 'low' | 'high';
-					systemPrompt?: string;
-				};
-
-				// Prepare the image based on source
-				let imageContent: string;
-
-				if (imageSource === 'binary') {
-					const binaryPropertyName = this.getNodeParameter('binaryPropertyName', i) as string;
-					const filename = this.getNodeParameter('filename', i, '') as string;
-					
-					const binaryMeta = items[i].binary?.[binaryPropertyName];
-					if (!binaryMeta) {
-						throw new Error(
-							`No binary data found in property "${binaryPropertyName}". Available properties: ${Object.keys(items[i].binary || {}).join(', ')}`,
-						);
-					}
-
-					// Get binary data buffer using n8n helper
-					const binaryDataBuffer = await this.helpers.getBinaryDataBuffer(i, binaryPropertyName);
-					const base64Data = binaryDataBuffer.toString('base64');
-					
-					const imageData = {
-						data: base64Data,
-						mimeType: binaryMeta.mimeType || 'image/jpeg',
-						fileName: binaryMeta.fileName || filename,
-					};
-
-					// Use prepareImage function to validate
-					const preparedImage = await prepareImage('binary', imageData, filename);
-
-					// Convert to data URI
-					imageContent = `data:${preparedImage.mimeType};base64,${preparedImage.data}`;
-
-				} else if (imageSource === 'url') {
-					imageContent = this.getNodeParameter('imageUrl', i) as string;
-					
-					// Validate URL format
-					if (!imageContent.match(/^https?:\/\/.+/)) {
-						throw new Error('Image URL must start with http:// or https://');
-					}
-
-				} else {
-					// base64
-					const base64Data = this.getNodeParameter('base64Data', i) as string;
-					const mimeType = this.getNodeParameter('base64MimeType', i) as string;
-
-					// Use prepareImage function to validate
-					const preparedImage = await prepareImage('base64', base64Data, undefined);
-
-					imageContent = `data:${mimeType};base64,${preparedImage.data}`;
-				}
-
-				// Build the multimodal message content
-				const messageContent: any[] = [
-					{
-						type: 'text',
-						text: prompt,
-					},
-					{
-						type: 'image_url',
-						image_url: {
-							url: imageContent,
-							...(options.imageDetail && { detail: options.imageDetail }),
-						},
-					},
-				];
-
-				// Create the messages array
-				const messages: any[] = [];
-
-				// Add system prompt if provided
-				if (options.systemPrompt) {
-					messages.push({
-						role: 'system',
-						content: options.systemPrompt,
-					});
-				}
-
-				// Add the human message with image
-				messages.push(new HumanMessage({ content: messageContent }));
-
-				// Invoke the connected chat model
-				const response = await model.invoke(messages);
-
-				// Extract the response content
-				const responseText = typeof response.content === 'string' 
-					? response.content 
-					: JSON.stringify(response.content);
-
-				// Preserve original data and add response in configured property
+			const result = await processItem.call(this, i, model, items);
+			returnData.push(result);
+		} catch (error) {
+			if (this.continueOnFail()) {
 				returnData.push({
 					json: {
 						...items[i].json,
-						[outputPropertyName]: responseText,
+						error: error.message,
 					},
 					binary: items[i].binary,
 					pairedItem: { item: i },
 				});
-
-			} catch (error) {
-				if (this.continueOnFail()) {
-					returnData.push({
-						json: {
-							...items[i].json,
-							error: error.message,
-						},
-						binary: items[i].binary,
-						pairedItem: { item: i },
-					});
-					continue;
-				}
-				throw error;
+				continue;
 			}
+			throw error;
 		}
-
-		return [returnData];
 	}
+
+	return [returnData];
 }
+}
+
+/**
+ * Process a single item through the vision chain
+ */
+async function processItem(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	model: BaseChatModel,
+	items: INodeExecutionData[],
+): Promise<INodeExecutionData> {
+	const imageSource = this.getNodeParameter('imageSource', itemIndex) as 'binary' | 'url' | 'base64';
+	const prompt = this.getNodeParameter('prompt', itemIndex) as string;
+	const outputPropertyName = this.getNodeParameter('outputPropertyName', itemIndex) as string;
+	const options = this.getNodeParameter('options', itemIndex, {}) as {
+		imageDetail?: 'auto' | 'low' | 'high';
+		systemPrompt?: string;
+	};
+
+	// Get image content based on source
+	const imageContent = await getImageContent.call(this, itemIndex, imageSource);
+
+	// Build the multimodal message content
+	const messageContent = buildMessageContent(prompt, imageContent, options);
+
+	// Create the messages array with optional system prompt
+	const messages: any[] = [];
+	if (options.systemPrompt) {
+		messages.push({
+			role: 'system',
+			content: options.systemPrompt,
+		});
+	}
+
+	// Add the human message with image
+	messages.push(new HumanMessage({ content: messageContent }));
+
+	// Invoke the connected chat model
+	const response = await model.invoke(messages);
+
+	// Extract the response text
+	const responseText = extractResponseText(response);
+
+	// Preserve original data and add response in configured property
+	return {
+		json: {
+			...items[itemIndex].json,
+			[outputPropertyName]: responseText,
+		},
+		binary: items[itemIndex].binary,
+		pairedItem: { item: itemIndex },
+	};
+}
+
+/**
+ * Get image content as data URI or URL based on source type
+ */
+async function getImageContent(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	imageSource: 'binary' | 'url' | 'base64',
+): Promise<string> {
+	switch (imageSource) {
+		case 'binary':
+			return processBinaryImage(this, itemIndex);
+		case 'url':
+			return processUrlImage(this, itemIndex);
+		case 'base64':
+			return processBase64Image(this, itemIndex);
+		default:
+			throw new Error(`Unsupported image source: ${imageSource}`);
+	}}
