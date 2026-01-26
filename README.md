@@ -69,6 +69,8 @@ Perfect for getting started or building AI agents:
               [Chat Model]
 ```
 
+📖 **[Complete workflow example](example-workflow-chain.json)**
+
 ### Universal LLM Vision (Full Control)
 
 For production workflows with specific requirements:
@@ -193,7 +195,7 @@ For **custom OpenAI-compatible APIs**:
 ### 📥 Example Files
 
 - **[example-workflow.json](example-workflow.json)** - Complete Universal LLM Vision workflow
-- **[example-vision-chain-workflow.json](example-vision-chain-workflow.json)** - Vision Chain with AI Agent
+- **[example-workflow-chain.json](example-workflow-chain.json)** - Vision Chain with AI Agent
 
 ### Universal LLM Vision Examples
 
