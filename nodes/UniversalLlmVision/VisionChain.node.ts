@@ -6,10 +6,7 @@ import type {
 } from 'n8n-workflow';
 import { HumanMessage } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import {
-	DEFAULT_VISION_SYSTEM_PROMPT,
-	ERROR_MESSAGES,
-} from './constants/visionChainDefaults';
+import { VISION_DEFAULTS, ERROR_MESSAGES } from './constants/config';
 import { getImageFromSource } from './utils/ImageSourceHelpers';
 import {
 	IMAGE_SOURCE_PARAMETER,
@@ -21,7 +18,7 @@ import {
 	PROMPT_PARAMETER,
 	OUTPUT_PROPERTY_PARAMETER,
 	IMAGE_DETAIL_PARAMETER_OPTION,
-} from './constants/sharedParameters';
+} from './constants/imageParameters';
 import {
 	buildMessageContent,
 	extractResponseText,
@@ -94,7 +91,7 @@ export class VisionChain implements INodeType {
 						name: 'systemPrompt',
 						type: 'string',
 						typeOptions: { rows: 8 },
-						default: DEFAULT_VISION_SYSTEM_PROMPT,
+						default: VISION_DEFAULTS.SYSTEM_PROMPT,
 						description: 'System instructions for the model (overrides defaults)',
 					},
 				],

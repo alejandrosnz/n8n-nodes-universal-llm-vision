@@ -9,10 +9,9 @@ import type {
 import { ImageProcessor } from './processors/ImageProcessor';
 import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
-import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
+import { DEFAULT_MODEL_PARAMETERS, VISION_DEFAULTS } from './constants/config';
 import { detectCredentials } from './utils/GenericFunctions';
 import { loadModelsForDropdown } from './utils/ModelLoader';
-import { DEFAULT_VISION_SYSTEM_PROMPT } from './constants/visionChainDefaults';
 import {
 	IMAGE_SOURCE_PARAMETER,
 	BINARY_PROPERTY_PARAMETER,
@@ -22,7 +21,7 @@ import {
 	BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
 	PROMPT_PARAMETER,
 	IMAGE_DETAIL_PARAMETER,
-} from './constants/sharedParameters';
+} from './constants/imageParameters';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -159,7 +158,7 @@ export class UniversalLlmVision implements INodeType {
             name: 'systemPrompt',
             type: 'string',
             typeOptions: { rows: 8 },
-            default: DEFAULT_VISION_SYSTEM_PROMPT,
+            default: VISION_DEFAULTS.SYSTEM_PROMPT,
             description: 'System instructions for the model (overrides defaults)',
           },
           {
