@@ -1,12 +1,15 @@
 {
   "name": "n8n-nodes-universal-llm-vision",
   "version": "0.3.3",
-  "description": "n8n node for Universal LLM Vision",
+  "description": "n8n nodes for Universal LLM Vision - Includes standalone node and langchain-compatible Vision Chain",
   "keywords": [
     "n8n-community-node-package",
     "vision",
     "llm",
-    "image-analysis"
+    "image-analysis",
+    "langchain",
+    "ai-agent",
+    "multimodal"
   ],
   "license": "MIT",
   "homepage": "https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision",
@@ -46,7 +49,8 @@
       "dist/credentials/UniversalLlmVisionApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/UniversalLlmVision/UniversalLlmVision.node.js"
+      "dist/nodes/UniversalLlmVision/UniversalLlmVision.node.js",
+      "dist/nodes/UniversalLlmVision/VisionChain.node.js"
     ]
   },
   "devDependencies": {
@@ -67,5 +71,8 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.17"
   }
 }
