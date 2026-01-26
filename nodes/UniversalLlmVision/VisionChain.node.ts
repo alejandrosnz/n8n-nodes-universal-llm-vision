@@ -8,14 +8,21 @@ import { HumanMessage } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import {
 	DEFAULT_VISION_SYSTEM_PROMPT,
-	DEFAULT_OUTPUT_PROPERTY,
-	DEFAULT_ANALYSIS_PROMPT,
 	ERROR_MESSAGES,
 } from './constants/visionChainDefaults';
+import { getImageFromSource } from './utils/ImageSourceHelpers';
 import {
-	processBinaryImage,
-	processUrlImage,
-	processBase64Image,
+	IMAGE_SOURCE_PARAMETER,
+	BINARY_PROPERTY_PARAMETER,
+	FILENAME_PARAMETER,
+	IMAGE_URL_PARAMETER,
+	BASE64_DATA_PARAMETER,
+	BASE64_MIME_TYPE_PARAMETER_SIMPLE,
+	PROMPT_PARAMETER,
+	OUTPUT_PROPERTY_PARAMETER,
+	IMAGE_DETAIL_PARAMETER_OPTION,
+} from './constants/sharedParameters';
+import {
 	buildMessageContent,
 	extractResponseText,
 } from './utils/visionChainHelpers';
@@ -63,115 +70,17 @@ export class VisionChain implements INodeType {
 		],
 		outputs: ['main'],
 		properties: [
-			// Image Input Configuration
-			{
-				displayName: 'Image Source',
-				name: 'imageSource',
-				type: 'options',
-				required: true,
-				options: [
-					{
-						name: 'Binary Data (Uploaded File)',
-						value: 'binary',
-						description: 'Use file from previous node output',
-					},
-					{
-						name: 'Public URL',
-						value: 'url',
-						description: 'Provide image URL directly',
-					},
-					{
-						name: 'Base64 String',
-						value: 'base64',
-						description: 'Provide base64-encoded image data',
-					},
-				],
-				default: 'binary',
-				description: 'Where to get the image from',
-			},
+			// Image Input Configuration (using shared parameters)
+			IMAGE_SOURCE_PARAMETER,
+			BINARY_PROPERTY_PARAMETER,
+			FILENAME_PARAMETER,
+			IMAGE_URL_PARAMETER,
+			BASE64_DATA_PARAMETER,
+			BASE64_MIME_TYPE_PARAMETER_SIMPLE,
+			PROMPT_PARAMETER,
+			OUTPUT_PROPERTY_PARAMETER,
 
-			// Binary data options
-			{
-				displayName: 'Binary Property Name',
-				name: 'binaryPropertyName',
-				type: 'string',
-				default: 'data',
-				description: 'The name of the binary property containing the image',
-				displayOptions: {
-					show: { imageSource: ['binary'] },
-				},
-			},
-			{
-				displayName: 'Filename (Optional)',
-				name: 'filename',
-				type: 'string',
-				default: '',
-				description: 'Image filename (used for MIME type detection)',
-				displayOptions: {
-					show: { imageSource: ['binary'] },
-				},
-			},
-
-			// URL options
-			{
-				displayName: 'Image URL',
-				name: 'imageUrl',
-				type: 'string',
-				default: '',
-				required: true,
-				placeholder: 'https://example.com/image.jpg',
-				description: 'HTTP(S) URL pointing to the image',
-				displayOptions: {
-					show: { imageSource: ['url'] },
-				},
-			},
-
-			// Base64 options
-			{
-				displayName: 'Base64 Data',
-				name: 'base64Data',
-				type: 'string',
-				default: '',
-				required: true,
-				description: 'Base64-encoded image data (without data: URI prefix)',
-				displayOptions: {
-					show: { imageSource: ['base64'] },
-				},
-			},
-			{
-				displayName: 'MIME Type',
-				name: 'base64MimeType',
-				type: 'string',
-				default: 'image/jpeg',
-				placeholder: 'image/jpeg, image/png, image/webp',
-				description: 'MIME type of the base64-encoded image',
-				displayOptions: {
-					show: { imageSource: ['base64'] },
-				},
-			},
-
-			// Analysis prompt
-			{
-				displayName: 'Prompt',
-				name: 'prompt',
-				type: 'string',
-				typeOptions: { rows: 4 },
-				required: true,
-				default: DEFAULT_ANALYSIS_PROMPT,
-				description: 'Question or instruction for analyzing the image',
-				placeholder: 'Describe the main objects, colors, and any text visible in this image',
-			},
-
-			// Output configuration
-			{
-				displayName: 'Output Property Name',
-				name: 'outputPropertyName',
-				type: 'string',
-				default: DEFAULT_OUTPUT_PROPERTY,
-				description: 'Property name for storing the analysis result',
-			},
-
-			// Image detail level
+			// Options collection (using shared parameters)
 			{
 				displayName: 'Options',
 				name: 'options',
@@ -179,30 +88,7 @@ export class VisionChain implements INodeType {
 				placeholder: 'Add Option',
 				default: {},
 				options: [
-					{
-						displayName: 'Image Detail',
-						name: 'imageDetail',
-						type: 'options',
-						options: [
-							{
-								name: 'Auto',
-								value: 'auto',
-								description: 'Let the model decide the detail level',
-							},
-							{
-								name: 'Low',
-								value: 'low',
-								description: 'Faster, less detailed analysis',
-							},
-							{
-								name: 'High',
-								value: 'high',
-								description: 'Slower, more detailed analysis',
-							},
-						],
-						default: 'auto',
-						description: 'Detail level for image processing (if supported by model)',
-					},
+					IMAGE_DETAIL_PARAMETER_OPTION,
 					{
 						displayName: 'System Prompt',
 						name: 'systemPrompt',
@@ -264,7 +150,6 @@ async function processItem(
 	model: BaseChatModel,
 	items: INodeExecutionData[],
 ): Promise<INodeExecutionData> {
-	const imageSource = this.getNodeParameter('imageSource', itemIndex) as 'binary' | 'url' | 'base64';
 	const prompt = this.getNodeParameter('prompt', itemIndex) as string;
 	const outputPropertyName = this.getNodeParameter('outputPropertyName', itemIndex) as string;
 	const options = this.getNodeParameter('options', itemIndex, {}) as {
@@ -272,8 +157,9 @@ async function processItem(
 		systemPrompt?: string;
 	};
 
-	// Get image content based on source
-	const imageContent = await getImageContent.call(this, itemIndex, imageSource);
+	// Get image content using unified helper (returns data URI for langchain)
+	const imageResult = await getImageFromSource(this, itemIndex, true);
+	const imageContent = imageResult.data;
 
 	// Build the multimodal message content
 	const messageContent = buildMessageContent(prompt, imageContent, options);
@@ -306,22 +192,3 @@ async function processItem(
 		pairedItem: { item: itemIndex },
 	};
 }
-
-/**
- * Get image content as data URI or URL based on source type
- */
-async function getImageContent(
-	this: IExecuteFunctions,
-	itemIndex: number,
-	imageSource: 'binary' | 'url' | 'base64',
-): Promise<string> {
-	switch (imageSource) {
-		case 'binary':
-			return processBinaryImage(this, itemIndex);
-		case 'url':
-			return processUrlImage(this, itemIndex);
-		case 'base64':
-			return processBase64Image(this, itemIndex);
-		default:
-			throw new Error(`Unsupported image source: ${imageSource}`);
-	}}

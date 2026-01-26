@@ -134,7 +134,7 @@ describe('VisionChain Node', () => {
 			);
 
 			await expect(visionChain.execute.call(mockExecuteFunctions)).rejects.toThrow(
-				'Image URL must start with http:// or https://',
+				'Invalid image URL',
 			);
 		});
 	});
