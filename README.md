@@ -28,6 +28,8 @@ This package provides **two nodes** with different integration approaches:
 
 **Best for:** Production workflows, custom APIs, full parameter control
 
+![Universal LLM Vision Node](docs/img/universal-llm-vision-example.png)
+
 ### 🔗 Vision Chain
 
 **Langchain integration node** - Reuse your existing n8n chat model connections (OpenAI, Anthropic, OpenRouter, etc.).
@@ -37,6 +39,8 @@ This package provides **two nodes** with different integration approaches:
 - ✅ **Quick switching**: Change models by swapping the connected chat model node
 
 > ⚠️ **Note**: Vision Chain cannot be used as a tool in AI Agents. For AI Agent tool integration, use Universal LLM Vision instead.
+
+![Vision Chain Node](docs/img/vision-chain-example.png)
 
 ### Important Note
 
