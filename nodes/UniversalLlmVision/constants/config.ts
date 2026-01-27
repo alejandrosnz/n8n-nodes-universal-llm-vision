@@ -79,3 +79,82 @@ export const MODEL_CAPABILITIES = {
   supportsImageDetail: ['openai', 'groq', 'grok', 'openrouter', 'gemini'],
   supportsJsonResponse: ['openai', 'groq', 'grok', 'openrouter', 'gemini'],
 } as const;
+
+/**
+ * Vision Node Defaults
+ * Default values for vision analysis configuration
+ */
+export const VISION_DEFAULTS = {
+	/**
+	 * Default system prompt for Vision Chain
+	 * Provides comprehensive guidelines for image analysis
+	 */
+	SYSTEM_PROMPT: 
+		'You are an AI assistant specialized in image understanding and visual analysis.\n\n' +
+		'Rules:\n' +
+		'- Use only information clearly visible in the image\n' +
+		'- Never guess or assume information that cannot be visually confirmed\n' +
+		'- If unable to answer fully, explain what\'s missing\n' +
+		'- Be concise, factual, and neutral by default\n\n' +
+		'Adapt your response to the user\'s request:\n' +
+		'- Text extraction → reproduce exactly as seen\n' +
+		'- Description → summarize visible elements\n' +
+		'- Unanswerable questions → state this explicitly',
+
+	/**
+	 * Default output property name for analysis results
+	 */
+	OUTPUT_PROPERTY: 'analysis',
+
+	/**
+	 * Default prompt for image analysis
+	 */
+	ANALYSIS_PROMPT: 'Analyze this image and describe what you see',
+} as const;
+
+/**
+ * Error Message Factory Functions
+ * Consolidated error messages used across both nodes
+ */
+export const ERROR_MESSAGES = {
+	/**
+	 * Error when no chat model is connected (Vision Chain specific)
+	 */
+	NO_CHAT_MODEL: 'No chat model connected. Please connect a chat model to the Vision Chain node.',
+
+	/**
+	 * Error when binary data property is not found
+	 * @param propertyName - The binary property name that was requested
+	 * @param availableProps - Comma-separated list of available binary properties
+	 * @returns Formatted error message with troubleshooting steps
+	 */
+	NO_BINARY_DATA: (propertyName: string, availableProps: string) => 
+		`No binary data found in property '${propertyName}'. ` +
+		`Available binary properties: [${availableProps || 'none'}]. ` +
+		`\n\nMake sure:` +
+		`\n1. Previous node outputs binary data` +
+		`\n2. Binary property name is correct (default: 'data')`,
+
+	/**
+	 * Error when image URL is invalid or unsafe
+	 */
+	INVALID_URL: 'Image URL must start with http:// or https://',
+
+	/**
+	 * Error when URL contains potentially unsafe content
+	 */
+	UNSAFE_URL: 'Potentially unsafe URL detected (contains script or javascript)',
+
+	/**
+	 * Error when binary data buffer is empty
+	 */
+	EMPTY_BINARY_DATA: 'Binary data buffer is empty. The image file appears to be empty.',
+
+	/**
+	 * Error when binary data read fails
+	 * @param errorMessage - Original error message from the failure
+	 * @returns Formatted error message
+	 */
+	BINARY_READ_FAILED: (errorMessage: string) => 
+		`Failed to read binary data: ${errorMessage}. The binary data may be corrupted or inaccessible.`,
+};

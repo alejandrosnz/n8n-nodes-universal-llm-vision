@@ -9,10 +9,19 @@ import type {
 import { ImageProcessor } from './processors/ImageProcessor';
 import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
-import { getMimeTypeOptions } from './processors/ImageProcessor';
-import { DEFAULT_MODEL_PARAMETERS } from './constants/config';
+import { DEFAULT_MODEL_PARAMETERS, VISION_DEFAULTS } from './constants/config';
 import { detectCredentials } from './utils/GenericFunctions';
 import { loadModelsForDropdown } from './utils/ModelLoader';
+import {
+	IMAGE_SOURCE_PARAMETER,
+	BINARY_PROPERTY_PARAMETER,
+	FILENAME_PARAMETER,
+	IMAGE_URL_PARAMETER,
+	BASE64_DATA_PARAMETER,
+	BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
+	PROMPT_PARAMETER,
+	IMAGE_DETAIL_PARAMETER,
+} from './constants/imageParameters';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -71,104 +80,14 @@ export class UniversalLlmVision implements INodeType {
         description: 'Vision-capable model for the selected provider. List is fetched automatically. To enter a model ID manually (e.g., for custom providers), use "Manual Model ID" in Advanced Options.',
       },
 
-      // Image Input Configuration
-      {
-        displayName: 'Image Source',
-        name: 'imageSource',
-        type: 'options',
-        required: true,
-        options: [
-          {
-            name: 'Binary Data (Uploaded File)',
-            value: 'binary',
-            description: 'Use file from previous node output',
-          },
-          {
-            name: 'Public URL',
-            value: 'url',
-            description: 'Provide image URL directly',
-          },
-          {
-            name: 'Base64 String',
-            value: 'base64',
-            description: 'Provide base64-encoded image data',
-          },
-        ],
-        default: 'binary',
-      },
-
-      // Binary data options
-      {
-        displayName: 'Binary Property Name',
-        name: 'binaryPropertyName',
-        type: 'string',
-        default: 'data',
-        description: 'The name of the binary property containing the image',
-        displayOptions: {
-          show: { imageSource: ['binary'] },
-        },
-      },
-      {
-        displayName: 'Filename (Optional)',
-        name: 'filename',
-        type: 'string',
-        default: '',
-        description: 'Image filename (used for MIME type detection). If provided, overrides binary metadata',
-        displayOptions: {
-          show: { imageSource: ['binary'] },
-        },
-      },
-
-      // URL options
-      {
-        displayName: 'Image URL',
-        name: 'imageUrl',
-        type: 'string',
-        default: '',
-        required: true,
-        placeholder: 'https://example.com/image.jpg',
-        description: 'HTTP(S) URL pointing to the image',
-        displayOptions: {
-          show: { imageSource: ['url'] },
-        },
-      },
-
-      // Base64 options
-      {
-        displayName: 'Base64 Data',
-        name: 'base64Data',
-        type: 'string',
-        default: '',
-        required: true,
-        description: 'Base64-encoded image data (without data: URI prefix)',
-        displayOptions: {
-          show: { imageSource: ['base64'] },
-        },
-      },
-      {
-        displayName: 'Image Format (for Base64)',
-        name: 'base64MimeType',
-        type: 'options',
-        noDataExpression: true,
-        options: getMimeTypeOptions(),
-        default: 'image/jpeg',
-        description: 'MIME type of the base64-encoded image. Auto-detected if possible',
-        displayOptions: {
-          show: { imageSource: ['base64'] },
-        },
-      },
-
-      // Analysis prompt
-      {
-        displayName: 'Prompt',
-        name: 'prompt',
-        type: 'string',
-        typeOptions: { rows: 4 },
-        required: true,
-        default: 'Analyze this image and describe what you see',
-        description: 'Question or instruction for analyzing the image',
-        placeholder: 'Describe the main objects, colors, composition, and any text visible in this image',
-      },
+      // Image Input Configuration (using shared parameters)
+      IMAGE_SOURCE_PARAMETER,
+      BINARY_PROPERTY_PARAMETER,
+      FILENAME_PARAMETER,
+      IMAGE_URL_PARAMETER,
+      BASE64_DATA_PARAMETER,
+      BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
+      PROMPT_PARAMETER,
 
       // Model configuration
       {
@@ -209,18 +128,7 @@ export class UniversalLlmVision implements INodeType {
             default: DEFAULT_MODEL_PARAMETERS.topP,
             description: 'Nucleus sampling. Keep at 0.9 for best results (default)',
           },
-          {
-            displayName: 'Image Detail',
-            name: 'imageDetail',
-            type: 'options',
-            options: [
-              { name: 'Auto', value: 'auto' },
-              { name: 'Low (Fast)', value: 'low' },
-              { name: 'High (Detailed)', value: 'high' },
-            ],
-            default: DEFAULT_MODEL_PARAMETERS.imageDetail,
-            description: 'Image resolution detail level (affects speed and cost). Not supported by all providers',
-          },
+          IMAGE_DETAIL_PARAMETER,
         ],
       },
 
@@ -250,7 +158,7 @@ export class UniversalLlmVision implements INodeType {
             name: 'systemPrompt',
             type: 'string',
             typeOptions: { rows: 8 },
-            default: 'You are an AI assistant specialized in image understanding and visual analysis.\n\nRules:\n- Use only information clearly visible in the image\n- Never guess or assume information that cannot be visually confirmed\n- If unable to answer fully, explain what\'s missing\n- Be concise, factual, and neutral by default\n\nAdapt your response to the user\'s request:\n- Text extraction → reproduce exactly as seen\n- Description → summarize visible elements\n- Unanswerable questions → state this explicitly',
+            default: VISION_DEFAULTS.SYSTEM_PROMPT,
             description: 'System instructions for the model (overrides defaults)',
           },
           {
