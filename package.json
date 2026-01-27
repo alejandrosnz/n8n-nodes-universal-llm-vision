@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-universal-llm-vision",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "n8n nodes for Universal LLM Vision - Includes standalone node and langchain-compatible Vision Chain",
   "keywords": [
     "n8n-community-node-package",
