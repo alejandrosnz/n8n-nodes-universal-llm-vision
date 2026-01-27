@@ -35,9 +35,8 @@ This package provides **two nodes** with different integration approaches:
 - ✅ **Reuse chat models**: Connect any n8n chat model node you already have configured
 - ✅ **Simpler setup**: No need to duplicate credentials
 - ✅ **Quick switching**: Change models by swapping the connected chat model node
-- ✅ **Langchain native**: Seamless integration with AI Agent chains
 
-**Best for:** AI agents, rapid prototyping, when you already have chat models configured
+> ⚠️ **Note**: Vision Chain cannot be used as a tool in AI Agents. For AI Agent tool integration, use Universal LLM Vision instead.
 
 ### Important Note
 
@@ -55,7 +54,7 @@ This package provides **two nodes** with different integration approaches:
 
 ### Vision Chain (Fastest Setup)
 
-Perfect for getting started or building AI agents:
+Perfect for getting started with LLM Vision:
 
 1. Add any **Chat Model** node (e.g., OpenAI Chat Model)
 2. Add **Vision Chain** node
@@ -221,15 +220,13 @@ Configure:
 
 ### Vision Chain Examples
 
-#### AI Agent with Vision
+#### Image Analysis with Chat Models
 ```
-Chat Trigger → AI Agent → Respond to User
-                   ↓
-              [Tools: Vision Chain, Calculator, ...]
-                   ↑
-              [Chat Model]
+[Data] → Vision Chain → [Process Results]
+             ↑
+        [Chat Model]
 ```
-Perfect for: Customer support, visual Q&A, multimodal assistants
+Perfect for: Image classification, visual Q&A, content moderation
 
 #### Dynamic Model Switching
 ```

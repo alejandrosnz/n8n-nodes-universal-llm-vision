@@ -6,15 +6,17 @@ The **Vision Chain** node is a langchain-compatible node that adds vision capabi
 
 - ✅ Accepts any langchain-compatible chat model as input
 - ✅ Uses the credentials from the connected chat model
-- ✅ Works with n8n's builtin AI Agent ecosystem
+- ✅ Provides langchain-native image processing for chat models
 - ✅ Supports binary data, URLs, and base64 images
 - ✅ Provides a cleaner separation of concerns (image processing vs. model invocation)
+
+> ⚠️ **Important**: Vision Chain cannot be used as a tool in n8n AI Agents. For AI Agent tool integration, use the Universal LLM Vision node instead.
 
 ## When to Use Vision Chain vs. Universal LLM Vision
 
 ### Use Vision Chain When:
 - You want to use n8n's builtin chat model nodes (OpenAI, Anthropic, OpenRouter, etc.)
-- You're building AI agent workflows that need vision capabilities
+- You're building langchain-compatible workflows that need vision capabilities
 - You prefer managing credentials at the chat model level
 - You want flexibility to swap between different chat models
 
@@ -101,13 +103,13 @@ Spreadsheet → Split In Batches → Vision Chain (+ Chat Model) → Aggregate �
 
 Process multiple images from a spreadsheet with URLs or binary data.
 
-### 3. AI Agent with Vision
+### 3. Image Classification Pipeline
 
 ```json
-Chat Trigger → AI Agent (+ Chat Model + Vision Chain as tool) → Chat Output
+[Data Source] → Vision Chain (+ Chat Model) → IF Node → [Route by Classification]
 ```
 
-Use Vision Chain as a tool in AI Agent workflows for multimodal conversations.
+Classify images and route them based on the analysis results.
 
 ## Supported Image Formats
 
@@ -151,7 +153,7 @@ The Vision Chain node includes comprehensive error handling:
 | System Prompt | ✅ Yes (with default) | ✅ Yes (with default) |
 | Output Property Name | ✅ Yes (configurable) | ✅ Yes (configurable) |
 | Data Pass-through | ✅ Yes (preserves original data) | ✅ Yes (preserves original data) |
-| AI Agent Compatible | ✅ Yes | ✅ Yes (via `usableAsTool`) |
+| AI Agent Tool Compatible | ❌ No | ✅ Yes (via `usableAsTool`) |
 | Langchain Native | ✅ Yes (chain node) | ❌ No (programmatic node) |
 | Custom Headers | ❌ No (handled by chat model) | ✅ Yes |
 | Additional Parameters | ❌ No (handled by chat model) | ✅ Yes |
