@@ -56,8 +56,9 @@ export class UniversalLlmVisionApi implements ICredentialType {
       name: 'baseUrl',
       type: 'string',
       default: '',
+      required: true,
       placeholder: 'e.g., https://api.custom.com/v1 or http://localhost:11434/v1',
-      description: 'The base URL endpoint for your OpenAI-compatible API',
+      description: 'The base URL endpoint for your OpenAI-compatible API. Obtain it from your provider\'s documentation, or your local provider setup.',
       displayOptions: {
         show: { provider: ['custom'] },
       },
