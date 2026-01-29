@@ -146,7 +146,8 @@ The node auto-fetches all vision-capable models from [models.dev](https://models
 
 For **custom OpenAI-compatible APIs**:
 - Select "Custom Provider"
-- Provide Base URL (e.g., `https://your-api.com/v1`)
+- Provide Base URL (e.g., `https://your-api.com/v1` or `http://localhost:11434/v1` for Ollama)
+- **API Key is optional** for local providers like Ollama - leave empty if not needed
 - The node will attempt to auto-fetch available models
 - Use **Manual Model ID** if auto-fetch fails
 

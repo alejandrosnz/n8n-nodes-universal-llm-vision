@@ -35,7 +35,7 @@ export class VisionChain implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Vision Chain',
 		name: 'visionChain',
-		icon: 'file:vision.svg',
+		icon: 'file:icon.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'Add vision capabilities to any chat model by processing images with multimodal prompts',

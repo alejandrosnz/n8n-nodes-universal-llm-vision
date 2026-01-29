@@ -27,7 +27,7 @@ export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Universal LLM Vision',
     name: 'universalLlmVision',
-    icon: 'file:vision.svg',
+    icon: 'file:icon.svg',
     group: ['transform'],
     version: [1, 1.1],
     defaultVersion: 1.1,
