@@ -137,6 +137,7 @@ The node auto-fetches all vision-capable models from [models.dev](https://models
 - Google: Gemini 2.5 Flash Lite, Gemini 3.0 Flash
 - OpenRouter: Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL
 - Grok/X.AI: Grok 4.1 Fast
+- Ollama (as Custom Provider): Gemma 3 (12B)
 
 #### Credentials
 
