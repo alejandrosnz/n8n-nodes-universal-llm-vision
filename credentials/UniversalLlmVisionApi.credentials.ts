@@ -25,6 +25,7 @@ export class UniversalLlmVisionApi implements ICredentialType {
       ],
       default: 'openai',
       required: true,
+      description: 'Select the AI provider to use for vision-capable models. Choose Custom if your provider is not listed.',
     },
     {
       displayName: 'API Key',
@@ -33,14 +34,31 @@ export class UniversalLlmVisionApi implements ICredentialType {
       typeOptions: { password: true },
       default: '',
       required: true,
+      description: 'The API key from your provider account. Get it from your provider\'s dashboard or API settings.',
+      displayOptions: {
+        show: { provider: ['openrouter', 'groq', 'grok', 'openai', 'anthropic', 'gemini'] },
+      },
+    },
+    {
+      displayName: 'API Key',
+      name: 'apiKey',
+      type: 'string',
+      typeOptions: { password: true },
+      default: '',
+      required: false,
+      description: 'The API key from your provider account. Leave empty if not required (e.g., local providers like Ollama).',
+      displayOptions: {
+        show: { provider: ['custom'] },
+      },
     },
     {
       displayName: 'Base URL',
       name: 'baseUrl',
       type: 'string',
       default: '',
-      placeholder: 'https://api.example.com/v1',
-      description: 'Leave empty to use default URL for the selected provider',
+      required: true,
+      placeholder: 'e.g., https://api.custom.com/v1 or http://localhost:11434/v1',
+      description: 'The base URL endpoint for your OpenAI-compatible API. Obtain it from your provider\'s documentation, or your local provider setup.',
       displayOptions: {
         show: { provider: ['custom'] },
       },
