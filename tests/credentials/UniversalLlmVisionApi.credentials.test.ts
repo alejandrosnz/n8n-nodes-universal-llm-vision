@@ -23,11 +23,13 @@ describe('UniversalLlmVisionApi Credentials', () => {
   });
 
   it('should have correct properties', () => {
-    expect(credentials.properties).toHaveLength(3);
+    expect(credentials.properties).toHaveLength(4);
 
     const propertyNames = credentials.properties.map((p) => p.name);
+    // There are two properties with the name 'apiKey' (for standard and custom), so only check for presence and count.
+    const apiKeyCount = propertyNames.filter((n) => n === 'apiKey').length;
+    expect(apiKeyCount).toBe(2);
     expect(propertyNames).toContain('provider');
-    expect(propertyNames).toContain('apiKey');
     expect(propertyNames).toContain('baseUrl');
   });
 
