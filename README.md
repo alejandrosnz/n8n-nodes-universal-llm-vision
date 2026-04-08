@@ -37,6 +37,7 @@ This package provides **two nodes** with different integration approaches:
 - ✅ **Reuse chat models**: Connect any n8n chat model node you already have configured
 - ✅ **Simpler setup**: No need to duplicate credentials
 - ✅ **Quick switching**: Change models by swapping the connected chat model node
+- ✅ **Image & Audio**: Supports both image analysis and audio transcription
 
 > ⚠️ **Note**: Vision Chain cannot be used as a tool in AI Agents. For AI Agent tool integration, use Universal LLM Vision instead.
 
@@ -206,15 +207,25 @@ For **custom OpenAI-compatible APIs**:
 
 #### Parameters
 
-**Required:**
+**Resource:**
+
+- **Analyze Image** - Analyze images with multimodal chat models
+- **Analyze Audio** - Transcribe and analyze audio files
+
+**Required (for Image):**
 
 - **Image Source**: Binary Data / URL / Base64
 - **Prompt**: Analysis instruction
 
+**Required (for Audio):**
+
+- **Audio Source**: Binary Data / URL / Base64
+- **Prompt**: Your analysis instruction (e.g., transcribe, summarize)
+
 **Options:**
 
-- **Image Detail**: Auto / Low / High (affects cost and quality)
-- **System Prompt**: Comprehensive default for image understanding (customizable)
+- **Image Detail**: Auto / Low / High (affects cost and quality, image only)
+- **System Prompt**: Comprehensive default for image/audio understanding (customizable)
 - **Output Property Name**: Configure result property (default: `analysis`)
 
 **Note:** Temperature, max tokens, and model selection are configured at the chat model node level.
@@ -278,6 +289,16 @@ Configure:
 ```
 
 Perfect for: Image classification, visual Q&A, content moderation
+
+#### Audio Transcription with Chat Models
+
+```
+[Data] → Vision Chain (Audio mode) → [Process Results]
+             ↑
+        [Chat Model]
+```
+
+Perfect for: Meeting transcription, podcast processing, voice memo analysis
 
 #### Dynamic Model Switching
 
