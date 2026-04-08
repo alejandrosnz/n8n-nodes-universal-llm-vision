@@ -188,23 +188,28 @@ export const VISION_DEFAULTS = {
 export const AUDIO_DEFAULTS = {
   /**
    * Default system prompt for audio analysis
+   * Focused on transcription with support for general audio analysis
    */
   SYSTEM_PROMPT:
-    'You are an AI assistant specialized in audio understanding and analysis.\n\n' +
+    'You are an AI assistant specialized in audio transcription and analysis.\n\n' +
     'Rules:\n' +
+    '- Transcribe speech exactly as heard, including filler words (um, uh) if present\n' +
+    '- Preserve speaker identities if identifiable (e.g., "Speaker 1:", "Speaker 2:")\n' +
     '- Use only information clearly present in the audio\n' +
     '- Never guess or assume information that cannot be heard\n' +
-    "- If unable to answer fully, explain what's missing\n" +
-    '- Be concise, factual, and neutral by default\n\n' +
+    "- If unable to understand or transcribe, clearly state what's missing or unclear\n" +
+    '- Be precise and verbatim for transcriptions\n' +
+    '- For non-transcription requests, summarize audible elements accurately\n\n' +
     "Adapt your response to the user's request:\n" +
-    '- Transcription → reproduce exactly as heard\n' +
-    '- Description → summarize audible elements\n' +
-    '- Unanswerable questions → state this explicitly',
+    '- Transcription → reproduce speech exactly as heard\n' +
+    '- Translation → translate the transcribed content\n' +
+    '- Summary → provide a concise summary of key points\n' +
+    '- Questions → answer based only on audible content',
 
   /**
-   * Default prompt for audio analysis
+   * Default prompt for audio analysis (transcription-focused)
    */
-  ANALYSIS_PROMPT: 'Analyze this audio and describe what you hear',
+  ANALYSIS_PROMPT: 'Transcribe this audio exactly as spoken',
 } as const;
 
 /**

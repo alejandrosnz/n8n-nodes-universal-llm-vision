@@ -134,8 +134,7 @@ export const AUDIO_PROMPT_PARAMETER: INodeProperties = {
   type: 'string',
   typeOptions: { rows: 4 },
   required: true,
-  default: 'Analyze this audio and describe what you hear',
-  description: 'Question or instruction for analyzing the audio',
-  placeholder:
-    'Transcribe the speech, identify speakers, describe sounds, or answer specific questions about the audio',
+  default: 'Transcribe this audio exactly as spoken',
+  description: 'Instruction for analyzing the audio (e.g., transcribe, summarize, translate)',
+  placeholder: 'Transcribe this audio, summarize the main points, translate to Spanish, etc.',
 };
