@@ -1,6 +1,6 @@
 # n8n-nodes-universal-llm-vision
 
-**Add vision capabilities to your n8n workflows** - Analyze images with AI using any LLM provider, with flexible integration options for every use case.
+**Add vision and audio capabilities to your n8n workflows** - Analyze images and audio with AI using any LLM provider, with flexible integration options for every use case.
 
 ## Installation
 
@@ -44,13 +44,14 @@ This package provides **two nodes** with different integration approaches:
 
 ### Important Note
 
-**Both nodes only work with vision-capable models.** Regular text-only models are not supported. Most modern multimodal models from OpenAI (GPT-4o), Anthropic (Claude Sonnet), Google (Gemini), and OpenRouter support vision.
+**Both nodes work with vision-capable and audio-capable models.** Regular text-only models are not supported. Most modern multimodal models from OpenAI (GPT-4o), Anthropic (Claude Sonnet), Google (Gemini), and OpenRouter support vision and audio.
 
 **Common features:**
-- Binary data, URL, and base64 image sources
+
+- Binary data, URL, and base64 image/audio sources
 - Customizable prompts with intelligent defaults
-- Auto/Low/High detail control for cost optimization
-- Production-ready with 241 tests
+- Auto/Low/High detail control for cost optimization (images)
+- Production-ready with tests
 
 📖 **[Read the detailed comparison in the Vision Chain documentation](docs/VISION_CHAIN.md)**
 
@@ -94,18 +95,21 @@ For production workflows with specific requirements:
 ## Use Cases
 
 **Universal LLM Vision** - Best for:
+
 - 🏭 **Production pipelines**: Batch image processing with metadata tracking
 - 📊 **Custom APIs**: Integration with proprietary vision models
 - 🔍 **Structured extraction**: OCR with JSON mode for invoices, receipts, forms
 - 🎯 **Full control workflows**: Custom headers, parameters, response formats
 
 **Vision Chain** - Best for:
+
 - 🤖 **AI Agents**: Customer support bots, visual Q&A assistants
 - ⚡ **Rapid prototyping**: Quick model testing and switching
 - 🔄 **Dynamic workflows**: Model selection based on conditions
 - 🔗 **Multi-step analysis**: Chaining different models for specialized tasks
 
 **Both nodes** - Common uses:
+
 - Product catalog descriptions and quality inspection
 - Document processing (text extraction, handwriting recognition)
 - Specialized analysis (medical, architectural, fashion)
@@ -118,6 +122,7 @@ For production workflows with specific requirements:
 #### Providers & Models
 
 **Supported Providers:**
+
 - OpenAI (GPT-4o, GPT-4 Turbo with Vision)
 - Google Gemini (Flash, Pro Vision)
 - Anthropic (Claude Sonnet, Opus with Vision)
@@ -128,12 +133,14 @@ For production workflows with specific requirements:
 
 **Model Selection:**
 The node auto-fetches all vision-capable models from [models.dev](https://models.dev), displaying:
+
 - Model name
 - Pricing (input/output per 1M tokens)
 - Model ID in parentheses (e.g., `$2.5 / $10 per 1M tokens (gpt-4o)`)
 
 **Tested Models:**
-- OpenAI: GPT 5, GPT 4.1, GPT 4o
+
+- OpenAI: GPT 5, GPT 4.1, GPT 4o, GPT 4o-audio-preview
 - Google: Gemini 2.5 Flash Lite, Gemini 3.0 Flash
 - OpenRouter: Gemma 3 27B, GLM 4.6V, Ministral 3, Nemotron VL, Qwen3 VL
 - Grok/X.AI: Grok 4.1 Fast
@@ -146,6 +153,7 @@ The node auto-fetches all vision-capable models from [models.dev](https://models
 3. (Optional) Custom base URL for custom providers
 
 For **custom OpenAI-compatible APIs**:
+
 - Select "Custom Provider"
 - Provide Base URL (e.g., `https://your-api.com/v1` or `http://localhost:11434/v1` for Ollama)
 - **API Key is optional** for local providers like Ollama - leave empty if not needed
@@ -154,18 +162,32 @@ For **custom OpenAI-compatible APIs**:
 
 #### Parameters
 
-**Required:**
+**Resource:**
+
+- **Analyze Image** - Analyze images with multimodal models
+- **Analyze Audio** - Transcribe and analyze audio files
+
+**Required (for Image):**
+
 - **Model**: Select from dropdown or enter manually
 - **Image Source**: Binary Data / URL / Base64
 - **Prompt**: Your analysis instruction
 
+**Required (for Audio):**
+
+- **Model**: Select from dropdown or enter manually
+- **Audio Source**: Binary Data / URL / Base64
+- **Prompt**: Your analysis instruction (e.g., transcribe, summarize)
+
 **Optional (Model Parameters):**
+
 - Temperature (0-2): Creativity level
 - Max Tokens: Response length limit
 - Top P: Nucleus sampling parameter
 
 **Advanced Options:**
-- System Prompt: Guide model behavior (intelligent default provided)
+
+- System Prompt: Guide model behavior (intelligent default provided for images and audio)
 - Response Format: Text or JSON
 - Custom Headers: Add custom HTTP headers
 - Additional Parameters: Provider-specific parameters
@@ -185,10 +207,12 @@ For **custom OpenAI-compatible APIs**:
 #### Parameters
 
 **Required:**
+
 - **Image Source**: Binary Data / URL / Base64
 - **Prompt**: Analysis instruction
 
 **Options:**
+
 - **Image Detail**: Auto / Low / High (affects cost and quality)
 - **System Prompt**: Comprehensive default for image understanding (customizable)
 - **Output Property Name**: Configure result property (default: `analysis`)
@@ -205,49 +229,74 @@ For **custom OpenAI-compatible APIs**:
 ### Universal LLM Vision Examples
 
 #### Image Analysis from URL
+
 ```
 Webhook → Set (image URL) → Universal LLM Vision → Respond
 ```
+
 Perfect for: Product catalog automation, web scraping with analysis
 
 #### Batch Image Processing
+
 ```
 Read Binary Files → Universal LLM Vision → IF → Split → [Process Results]
 ```
+
 Perfect for: Quality control, document classification, content moderation
 
 #### OCR with Structured Output
+
 ```
 HTTP Request (get image) → Universal LLM Vision (JSON mode) → Set → Database
 ```
+
 Configure:
+
 - Response Format: JSON
 - Prompt: "Extract text with structure: {title, date, amount, items: []}"
+
+#### Audio Transcription
+
+```
+Read Binary Files → Universal LLM Vision (Audio mode) → Set → Database
+```
+
+Configure:
+
+- Resource: Analyze Audio
+- Prompt: "Transcribe this audio exactly as spoken"
+  Perfect for: Meeting transcription, podcast processing, voice memo analysis
 
 ### Vision Chain Examples
 
 #### Image Analysis with Chat Models
+
 ```
 [Data] → Vision Chain → [Process Results]
              ↑
         [Chat Model]
 ```
+
 Perfect for: Image classification, visual Q&A, content moderation
 
 #### Dynamic Model Switching
+
 ```
 [Data] → Vision Chain → [Output]
              ↑
         [Different Chat Models based on conditions]
 ```
+
 Perfect for: Cost optimization, fallback strategies, A/B testing
 
 #### Image Analysis Pipeline
+
 ```
 Download File → Vision Chain (describe) → Vision Chain (extract text) → Process
                      ↑                         ↑
                 [Model A]                  [Model B]
 ```
+
 Perfect for: Multi-step analysis, combining different model strengths
 
 ## Development & Contributing
@@ -260,6 +309,7 @@ This package is built using the [n8n-community-node-starter](https://github.com/
 - AI-assisted development tools
 
 Contributions are welcome! Feel free to:
+
 - 🐛 **Report bugs** by opening an issue
 - 💡 **Suggest features** or improvements
 - 🔧 **Submit pull requests** with fixes or enhancements
