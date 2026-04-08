@@ -313,10 +313,6 @@ export class UniversalLlmVision implements INodeType {
           },
           {
             ...IMAGE_DETAIL_PARAMETER,
-            // Image detail is only meaningful for image analysis
-            displayOptions: {
-              hide: { resource: ['analyzeAudio'] },
-            },
           },
         ],
       },
@@ -339,11 +335,6 @@ export class UniversalLlmVision implements INodeType {
             placeholder: 'e.g., gpt-4o-audio-preview, gemini-2.0-flash',
             description:
               'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
-            displayOptions: {
-              show: {
-                '@version': [1.1, 1.2],
-              },
-            },
           },
           {
             displayName: 'System Prompt',
