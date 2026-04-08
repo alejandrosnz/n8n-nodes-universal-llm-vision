@@ -4,7 +4,11 @@
  * (OpenRouter, Groq, Grok, Gemini)
  */
 
-import { BaseProviderStrategy, type ProviderRequestOptions, type ModelInfo } from './IProviderStrategy';
+import {
+  BaseProviderStrategy,
+  type ProviderRequestOptions,
+  type ModelInfo,
+} from './IProviderStrategy';
 
 export class OpenAiStrategy extends BaseProviderStrategy {
   name = 'openai';
@@ -19,13 +23,25 @@ export class OpenAiStrategy extends BaseProviderStrategy {
 
   buildHeaders(apiKey: string): Record<string, string> {
     return {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     };
   }
 
   buildRequestBody(options: ProviderRequestOptions): Record<string, any> {
-    const { model, prompt, image, imageDetail, temperature, maxTokens, topP, systemPrompt, responseFormat, additionalParameters } = options;
+    const {
+      model,
+      prompt,
+      image,
+      audio,
+      imageDetail,
+      temperature,
+      maxTokens,
+      topP,
+      systemPrompt,
+      responseFormat,
+      additionalParameters,
+    } = options;
 
     const body: any = {
       model,
@@ -55,22 +71,44 @@ export class OpenAiStrategy extends BaseProviderStrategy {
       },
     ];
 
-    if (image.source === 'url') {
-      userContent.push({
-        type: 'image_url',
-        image_url: {
-          url: image.data,
-          ...(this.supportsImageDetail && imageDetail ? { detail: imageDetail } : {}),
-        },
-      });
-    } else {
-      userContent.push({
-        type: 'image_url',
-        image_url: {
-          url: `data:${image.mimeType};base64,${image.data}`,
-          ...(this.supportsImageDetail && imageDetail ? { detail: imageDetail } : {}),
-        },
-      });
+    if (audio) {
+      // ── Audio input ──────────────────────────────────────────────────
+      if (audio.source === 'url') {
+        // Pass the URL directly — support varies by provider.
+        // If the provider API rejects it the user will get a clear API error.
+        userContent.push({
+          type: 'image_url',
+          image_url: { url: audio.data },
+        });
+      } else {
+        // binary or base64 → use the OpenAI input_audio block
+        userContent.push({
+          type: 'input_audio',
+          input_audio: {
+            data: audio.data,
+            format: audio.format, // 'mp3', 'wav', 'ogg', etc.
+          },
+        });
+      }
+    } else if (image) {
+      // ── Image input ──────────────────────────────────────────────────
+      if (image.source === 'url') {
+        userContent.push({
+          type: 'image_url',
+          image_url: {
+            url: image.data,
+            ...(this.supportsImageDetail && imageDetail ? { detail: imageDetail } : {}),
+          },
+        });
+      } else {
+        userContent.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:${image.mimeType};base64,${image.data}`,
+            ...(this.supportsImageDetail && imageDetail ? { detail: imageDetail } : {}),
+          },
+        });
+      }
     }
 
     messages.push({
@@ -109,14 +147,14 @@ export class OpenAiStrategy extends BaseProviderStrategy {
 
   parseModelsResponse(response: any): ModelInfo[] {
     const models = response.data || [];
-    
+
     // Sort by creation date (newest first)
     const sortedModels = [...models].sort((a: any, b: any) => {
       const dateA = a.created || 0;
       const dateB = b.created || 0;
       return dateB - dateA; // Descending order (newest first)
     });
-    
+
     // Return only model IDs - no filtering or additional metadata
     return sortedModels.map((model: any) => ({
       id: model.id,
@@ -135,7 +173,7 @@ export class OpenRouterStrategy extends OpenAiStrategy {
 
   buildHeaders(apiKey: string): Record<string, string> {
     return {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision',
       'X-Title': 'Universal LLM Vision n8n Node',
@@ -148,14 +186,14 @@ export class OpenRouterStrategy extends OpenAiStrategy {
 
   parseModelsResponse(response: any): ModelInfo[] {
     const models = response.data || [];
-    
+
     // Sort models alphabetically by name for better UX
     const sortedModels = [...models].sort((a: any, b: any) => {
       const nameA = (a.id || '').toLowerCase();
       const nameB = (b.id || '').toLowerCase();
       return nameA.localeCompare(nameB);
     });
-    
+
     // Return only model IDs - no filtering or additional metadata
     return sortedModels.map((model: any) => ({
       id: model.id,

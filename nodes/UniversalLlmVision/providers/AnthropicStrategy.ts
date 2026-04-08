@@ -4,6 +4,7 @@
  */
 
 import { BaseProviderStrategy, type ProviderRequestOptions } from './IProviderStrategy';
+import { ERROR_MESSAGES } from '../constants/config';
 
 export class AnthropicStrategy extends BaseProviderStrategy {
   name = 'anthropic';
@@ -25,7 +26,22 @@ export class AnthropicStrategy extends BaseProviderStrategy {
   }
 
   buildRequestBody(options: ProviderRequestOptions): Record<string, any> {
-    const { model, prompt, image, temperature, maxTokens, topP, systemPrompt, additionalParameters } = options;
+    const {
+      model,
+      prompt,
+      image,
+      audio,
+      temperature,
+      maxTokens,
+      topP,
+      systemPrompt,
+      additionalParameters,
+    } = options;
+
+    // Anthropic does not support audio input in the messages API
+    if (audio) {
+      throw new Error(ERROR_MESSAGES.AUDIO_NOT_SUPPORTED('Anthropic'));
+    }
 
     const body: any = {
       model,
@@ -41,23 +57,25 @@ export class AnthropicStrategy extends BaseProviderStrategy {
 
     const content: any[] = [];
 
-    if (image.source === 'url') {
-      content.push({
-        type: 'image',
-        source: {
-          type: 'url',
-          url: image.data,
-        },
-      });
-    } else {
-      content.push({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: image.mimeType,
-          data: image.data,
-        },
-      });
+    if (image) {
+      if (image.source === 'url') {
+        content.push({
+          type: 'image',
+          source: {
+            type: 'url',
+            url: image.data,
+          },
+        });
+      } else {
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: image.mimeType,
+            data: image.data,
+          },
+        });
+      }
     }
 
     content.push({

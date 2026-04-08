@@ -1,5 +1,6 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import type { PreparedImage } from '../processors/ImageProcessor';
+import type { PreparedAudio } from '../processors/AudioProcessor';
 import { buildRequest, getHeadersWithAuth } from '../utils/GenericFunctions';
 import { REQUEST_TIMEOUT_MS } from '../constants/config';
 
@@ -15,13 +16,14 @@ export class RequestHandler {
   }
 
   /**
-   * Build and execute the API request to the LLM vision provider
+   * Build and execute the API request to the LLM provider
    * @param provider - The provider name (e.g., 'openai', 'anthropic')
    * @param apiKey - The API key for authentication
    * @param customBaseUrl - Optional custom base URL for the API
    * @param customHeaders - Additional custom headers to include
-   * @param model - The model identifier to use (comes from models.dev in correct format)
-   * @param preparedImage - The prepared image data
+   * @param model - The model identifier to use
+   * @param preparedImage - The prepared image data (analyzeImage resource)
+   * @param preparedAudio - The prepared audio data (analyzeAudio resource)
    * @param prompt - The text prompt for analysis
    * @param modelParameters - Optional model parameters (temperature, maxTokens, etc.)
    * @param advancedOptions - Advanced options like system prompt and response format
@@ -34,18 +36,19 @@ export class RequestHandler {
     customBaseUrl: string | undefined,
     customHeaders: Record<string, string>,
     model: string,
-    preparedImage: PreparedImage,
+    preparedImage: PreparedImage | undefined,
+    preparedAudio: PreparedAudio | undefined,
     prompt: string,
     modelParameters: any,
     advancedOptions: any
   ): Promise<any> {
     // Build request options object with all parameters
-    // Model ID comes directly from models.dev and is already in the correct format for each provider
     const requestOptions = {
       provider,
       model,
       prompt,
       image: preparedImage,
+      audio: preparedAudio,
       imageDetail: modelParameters?.imageDetail,
       temperature: modelParameters?.temperature,
       maxTokens: modelParameters?.maxTokens,
@@ -70,7 +73,7 @@ export class RequestHandler {
       headers,
       body: JSON.stringify(body),
       json: true,
-      timeout: REQUEST_TIMEOUT_MS, // Configurable timeout for image processing
+      timeout: REQUEST_TIMEOUT_MS,
     });
 
     return response;
