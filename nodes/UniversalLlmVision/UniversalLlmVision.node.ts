@@ -10,7 +10,7 @@ import { ImageProcessor } from './processors/ImageProcessor';
 import { AudioProcessor } from './processors/AudioProcessor';
 import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
-import { DEFAULT_MODEL_PARAMETERS, VISION_DEFAULTS, AUDIO_DEFAULTS } from './constants/config';
+import { DEFAULT_MODEL_PARAMETERS, UNIVERSAL_DEFAULTS } from './constants/config';
 import { detectCredentials } from './utils/GenericFunctions';
 import { loadModelsForDropdown } from './utils/ModelLoader';
 import {
@@ -341,8 +341,8 @@ export class UniversalLlmVision implements INodeType {
             name: 'systemPrompt',
             type: 'string',
             typeOptions: { rows: 8 },
-            default: VISION_DEFAULTS.SYSTEM_PROMPT,
-            description: 'System instructions for the model (overrides defaults)',
+            default: UNIVERSAL_DEFAULTS.SYSTEM_PROMPT,
+            description: 'System instructions for the model (uses default if empty)',
           },
           {
             displayName: 'Response Format',
@@ -519,10 +519,10 @@ export class UniversalLlmVision implements INodeType {
           const audioProcessor = new AudioProcessor(this);
           const preparedAudio = await audioProcessor.getPreparedAudio(i);
 
-          // Use audio-specific system prompt if none provided
+          // Use universal system prompt if none provided
           const audioOptions = {
             ...advancedOptions,
-            systemPrompt: advancedOptions.systemPrompt || AUDIO_DEFAULTS.SYSTEM_PROMPT,
+            systemPrompt: advancedOptions.systemPrompt || UNIVERSAL_DEFAULTS.SYSTEM_PROMPT,
           };
 
           const response = await requestHandler.executeRequest(
