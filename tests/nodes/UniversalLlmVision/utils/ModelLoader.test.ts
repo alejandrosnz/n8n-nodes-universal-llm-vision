@@ -60,7 +60,7 @@ describe('ModelLoader', () => {
           'custom',
           'test-key',
           'https://custom.api.com/v1',
-          mockHttpRequest,
+          mockHttpRequest
         );
       });
 
@@ -78,7 +78,7 @@ describe('ModelLoader', () => {
         };
 
         (GenericFunctions.fetchProviderModels as jest.Mock).mockRejectedValue(
-          new Error('Connection timeout'),
+          new Error('Connection timeout')
         );
 
         const result = await loadModelsForDropdown(credInfo, mockHttpRequest);
@@ -161,6 +161,35 @@ describe('ModelLoader', () => {
         expect(GenericFunctions.fetchAllVisionModels).toHaveBeenCalledWith(
           mockHttpRequest,
           'openai',
+          'image'
+        );
+      });
+
+      it('should pass audio modality to fetchAllVisionModels when modality is "audio"', async () => {
+        const credInfo: CredentialInfo = {
+          credentials: {
+            provider: 'openai',
+            apiKey: 'test-key',
+          },
+          credentialName: 'universalLlmVisionApi',
+          provider: 'openai',
+          apiKey: 'test-key',
+        };
+
+        const mockModels = [
+          { id: 'gpt-4o-audio-preview', name: 'GPT-4o Audio Preview', description: 'Audio model' },
+        ];
+
+        (GenericFunctions.fetchAllVisionModels as jest.Mock).mockResolvedValue(mockModels);
+
+        const result = await loadModelsForDropdown(credInfo, mockHttpRequest, 'audio');
+
+        expect(result).toHaveLength(1);
+        expect(result[0].value).toBe('gpt-4o-audio-preview');
+        expect(GenericFunctions.fetchAllVisionModels).toHaveBeenCalledWith(
+          mockHttpRequest,
+          'openai',
+          'audio'
         );
       });
 
@@ -196,7 +225,7 @@ describe('ModelLoader', () => {
         };
 
         (GenericFunctions.fetchAllVisionModels as jest.Mock).mockRejectedValue(
-          new Error('API rate limit exceeded'),
+          new Error('API rate limit exceeded')
         );
 
         const result = await loadModelsForDropdown(credInfo, mockHttpRequest);
@@ -232,6 +261,7 @@ describe('ModelLoader', () => {
         expect(GenericFunctions.fetchAllVisionModels).toHaveBeenCalledWith(
           mockHttpRequest,
           'groq',
+          'image'
         );
       });
     });
@@ -250,9 +280,7 @@ describe('ModelLoader', () => {
           customBaseUrl: 'https://custom.openai.com',
         };
 
-        const mockModels = [
-          { id: 'model-1', name: 'Model 1', description: 'Test model' },
-        ];
+        const mockModels = [{ id: 'model-1', name: 'Model 1', description: 'Test model' }];
 
         (GenericFunctions.fetchAllVisionModels as jest.Mock).mockResolvedValue(mockModels);
 
@@ -263,6 +291,7 @@ describe('ModelLoader', () => {
         expect(GenericFunctions.fetchAllVisionModels).toHaveBeenCalledWith(
           mockHttpRequest,
           'openai',
+          'image'
         );
         expect(GenericFunctions.fetchProviderModels).not.toHaveBeenCalled();
       });

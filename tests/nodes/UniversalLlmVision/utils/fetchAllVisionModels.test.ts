@@ -8,7 +8,7 @@ import { fetchAllVisionModels } from '../../../../nodes/UniversalLlmVision/utils
 describe('fetchAllVisionModels', () => {
   // Mock response data based on models.dev API structure
   const mockModelsDevResponse = {
-    'openai': {
+    openai: {
       id: 'openai',
       name: 'OpenAI',
       env: ['OPENAI_API_KEY'],
@@ -121,7 +121,7 @@ describe('fetchAllVisionModels', () => {
         },
       },
     },
-    'anthropic': {
+    anthropic: {
       id: 'anthropic',
       name: 'Anthropic',
       env: ['ANTHROPIC_API_KEY'],
@@ -168,7 +168,7 @@ describe('fetchAllVisionModels', () => {
       method: 'GET',
       url: 'https://models.dev/api.json',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       json: true,
       timeout: 15000,
@@ -178,7 +178,7 @@ describe('fetchAllVisionModels', () => {
     expect(result).toHaveLength(4);
 
     // Verify all returned models support image input
-    const modelIds = result.map(m => m.id);
+    const modelIds = result.map((m) => m.id);
     expect(modelIds).toContain('gpt-4o');
     expect(modelIds).toContain('gpt-4-turbo');
     expect(modelIds).toContain('gpt-4o-mini');
@@ -186,6 +186,33 @@ describe('fetchAllVisionModels', () => {
 
     // text-davinci-003 should NOT be included (no image support)
     expect(modelIds).not.toContain('text-davinci-003');
+  });
+
+  it('should filter by audio modality when modality is "audio"', async () => {
+    const mockHttpRequest = jest.fn().mockResolvedValue(mockModelsDevResponse);
+
+    const result = await fetchAllVisionModels(mockHttpRequest, undefined, 'audio');
+
+    // Only gpt-4o has audio in input modalities
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('gpt-4o');
+
+    // Image-only models should NOT be included
+    const modelIds = result.map((m) => m.id);
+    expect(modelIds).not.toContain('gpt-4-turbo');
+    expect(modelIds).not.toContain('gpt-4o-mini');
+    expect(modelIds).not.toContain('claude-3-5-sonnet-20241022');
+  });
+
+  it('should filter audio models by provider when both providerFilter and audio modality are set', async () => {
+    const mockHttpRequest = jest.fn().mockResolvedValue(mockModelsDevResponse);
+
+    // Filter OpenAI audio models
+    const result = await fetchAllVisionModels(mockHttpRequest, 'openai', 'audio');
+
+    // Only gpt-4o (openai) has audio in input modalities
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('gpt-4o');
   });
 
   it('should filter models by provider when providerFilter is provided', async () => {
@@ -201,12 +228,8 @@ describe('fetchAllVisionModels', () => {
     // gpt-4o-mini: 2024-07-18
     // gpt-4o: 2024-05-13
     // gpt-4-turbo: 2024-04-09
-    const modelIds = result.map(m => m.id);
-    expect(modelIds).toEqual([
-      'gpt-4o-mini',
-      'gpt-4o',
-      'gpt-4-turbo',
-    ]);
+    const modelIds = result.map((m) => m.id);
+    expect(modelIds).toEqual(['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo']);
 
     // Should not include Anthropic models
     expect(modelIds).not.toContain('claude-3-5-sonnet-20241022');
@@ -222,11 +245,11 @@ describe('fetchAllVisionModels', () => {
     expect(result).toHaveLength(1);
 
     // Verify all returned models are from Anthropic
-    const modelIds = result.map(m => m.id);
+    const modelIds = result.map((m) => m.id);
     expect(modelIds).toEqual(['claude-3-5-sonnet-20241022']);
 
     // Should not include OpenAI models
-    const openaiModels = modelIds.filter(m => m.includes('openai'));
+    const openaiModels = modelIds.filter((m) => m.includes('openai'));
     expect(openaiModels).toHaveLength(0);
   });
 
@@ -236,7 +259,7 @@ describe('fetchAllVisionModels', () => {
     const result = await fetchAllVisionModels(mockHttpRequest);
 
     // Find the GPT-4o model
-    const gpt4o = result.find(m => m.id === 'gpt-4o');
+    const gpt4o = result.find((m) => m.id === 'gpt-4o');
 
     expect(gpt4o).toBeDefined();
     expect(gpt4o!.name).toBe('OpenAI: GPT-4o');
@@ -382,7 +405,7 @@ describe('fetchAllVisionModels', () => {
 
     // Verify ID format is just the model ID without provider prefix
     // and provider field contains the provider name
-    result.forEach(model => {
+    result.forEach((model) => {
       expect(model.id).toBeTruthy();
       expect(model.id).not.toMatch(/^[a-z]+\//); // Should NOT start with provider/
       expect(model.provider).toBeTruthy(); // Should have provider field

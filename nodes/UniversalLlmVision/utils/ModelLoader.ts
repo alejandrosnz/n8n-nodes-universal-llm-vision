@@ -14,7 +14,8 @@ import { fetchAllVisionModels, fetchProviderModels } from './GenericFunctions';
 const NO_MODELS_OPTION: INodePropertyOptions = {
   name: '⚠️ No models found for this provider',
   value: '',
-  description: 'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-5-nano, gemini-3.0-flash)',
+  description:
+    'Add "Manual Model ID" in Advanced Options and enter the model ID directly (e.g., gpt-5-nano, gemini-3.0-flash)',
 };
 
 /**
@@ -58,7 +59,7 @@ function modelsToOptions(models: ModelInfo[]): INodePropertyOptions[] {
  */
 async function fetchCustomProviderModels(
   credInfo: CredentialInfo,
-  httpRequest: (requestOptions: any) => Promise<any>,
+  httpRequest: (requestOptions: any) => Promise<any>
 ): Promise<INodePropertyOptions[]> {
   const { provider, apiKey, customBaseUrl } = credInfo;
 
@@ -67,12 +68,7 @@ async function fetchCustomProviderModels(
   }
 
   try {
-    const models = await fetchProviderModels(
-      provider,
-      apiKey,
-      customBaseUrl,
-      httpRequest,
-    );
+    const models = await fetchProviderModels(provider, apiKey, customBaseUrl, httpRequest);
 
     if (models.length > 0) {
       return modelsToOptions(models);
@@ -88,14 +84,16 @@ async function fetchCustomProviderModels(
  * Fetch models from models.dev API for known providers
  * @param provider - Provider name (openai, anthropic, etc.)
  * @param httpRequest - HTTP request function from n8n context
+ * @param modality - Input modality to filter by: 'image' (default) or 'audio'
  * @returns Promise<INodePropertyOptions[]> - Array of model options or error message
  */
 async function fetchKnownProviderModels(
   provider: string,
   httpRequest: (requestOptions: any) => Promise<any>,
+  modality: 'image' | 'audio' = 'image'
 ): Promise<INodePropertyOptions[]> {
   try {
-    const models = await fetchAllVisionModels(httpRequest, provider);
+    const models = await fetchAllVisionModels(httpRequest, provider, modality);
 
     if (models.length === 0) {
       return [NO_MODELS_OPTION];
@@ -112,11 +110,13 @@ async function fetchKnownProviderModels(
  * Routes to custom provider API or models.dev depending on configuration
  * @param credInfo - Credential information including provider and baseUrl
  * @param httpRequest - HTTP request function from n8n context
+ * @param modality - Input modality to filter by: 'image' (default) or 'audio'
  * @returns Promise<INodePropertyOptions[]> - Array of model options for dropdown
  */
 export async function loadModelsForDropdown(
   credInfo: CredentialInfo,
   httpRequest: (requestOptions: any) => Promise<any>,
+  modality: 'image' | 'audio' = 'image'
 ): Promise<INodePropertyOptions[]> {
   const { provider } = credInfo;
 
@@ -126,5 +126,5 @@ export async function loadModelsForDropdown(
   }
 
   // For known providers, use models.dev API
-  return fetchKnownProviderModels(provider, httpRequest);
+  return fetchKnownProviderModels(provider, httpRequest, modality);
 }
