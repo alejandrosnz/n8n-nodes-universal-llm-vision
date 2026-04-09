@@ -4,6 +4,10 @@
  */
 
 import type { PreparedImage } from '../processors/ImageProcessor';
+import type { PreparedAudio } from '../processors/AudioProcessor';
+
+// Re-export so consumers can import from one place
+export type { PreparedAudio };
 
 /**
  * Request format type for strategies
@@ -138,7 +142,10 @@ export interface ModelInfo {
 export interface ProviderRequestOptions {
   model: string;
   prompt: string;
-  image: PreparedImage;
+  /** Image data — present when resource is 'analyzeImage' */
+  image?: PreparedImage;
+  /** Audio data — present when resource is 'analyzeAudio' */
+  audio?: PreparedAudio;
   imageDetail?: string;
   temperature?: number;
   maxTokens?: number;
@@ -168,7 +175,7 @@ export abstract class BaseProviderStrategy implements IProviderStrategy {
    */
   buildHeaders(apiKey: string): Record<string, string> {
     return {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     };
   }

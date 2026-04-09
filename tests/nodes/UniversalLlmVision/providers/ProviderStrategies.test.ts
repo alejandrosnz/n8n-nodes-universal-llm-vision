@@ -1,7 +1,18 @@
-import { OpenAiStrategy, OpenRouterStrategy, GroqStrategy } from '../../../../nodes/UniversalLlmVision/providers/OpenAiStrategy';
+import {
+  OpenAiStrategy,
+  OpenRouterStrategy,
+  GroqStrategy,
+} from '../../../../nodes/UniversalLlmVision/providers/OpenAiStrategy';
 import { AnthropicStrategy } from '../../../../nodes/UniversalLlmVision/providers/AnthropicStrategy';
-import { getProviderStrategy, getProviderOptions } from '../../../../nodes/UniversalLlmVision/providers/ProviderRegistry';
+import {
+  getProviderStrategy,
+  getProviderOptions,
+} from '../../../../nodes/UniversalLlmVision/providers/ProviderRegistry';
 import type { ProviderRequestOptions } from '../../../../nodes/UniversalLlmVision/providers/IProviderStrategy';
+import type { PreparedAudio } from '../../../../nodes/UniversalLlmVision/processors/AudioProcessor';
+
+/** Small valid base64 payload (12 zero-bytes) */
+const SMALL_AUDIO_BASE64 = Buffer.alloc(12).toString('base64');
 
 describe('Provider Strategies', () => {
   const mockImage = {
@@ -64,7 +75,11 @@ describe('Provider Strategies', () => {
     });
 
     it('should handle URL images in request body', () => {
-      const urlImage = { ...mockImage, source: 'url' as const, data: 'https://example.com/image.jpg' };
+      const urlImage = {
+        ...mockImage,
+        source: 'url' as const,
+        data: 'https://example.com/image.jpg',
+      };
       const options = { ...mockRequestOptions, image: urlImage };
       const body = strategy.buildRequestBody(options);
       const content = body.messages[0].content;
@@ -94,6 +109,99 @@ describe('Provider Strategies', () => {
       expect(metadata.usage.output_tokens).toBe(50);
       expect(metadata.finish_reason).toBe('stop');
     });
+
+    describe('Audio input in buildRequestBody', () => {
+      const mockAudio: PreparedAudio = {
+        data: SMALL_AUDIO_BASE64,
+        mimeType: 'audio/mpeg',
+        format: 'mp3',
+        size: 12,
+        source: 'base64',
+      };
+
+      it('should use input_audio block for base64/binary audio', () => {
+        const options: ProviderRequestOptions = {
+          model: 'gpt-4o-audio-preview',
+          prompt: 'Analyze this audio',
+          audio: mockAudio,
+        };
+        const body = strategy.buildRequestBody(options);
+        const userContent = body.messages[body.messages.length - 1].content;
+        const audioContent = userContent.find((c: any) => c.type === 'input_audio');
+        expect(audioContent).toBeDefined();
+        expect(audioContent.input_audio.data).toBe(SMALL_AUDIO_BASE64);
+        expect(audioContent.input_audio.format).toBe('mp3');
+      });
+
+      it('should use image_url block for URL audio source', () => {
+        const urlAudio: PreparedAudio = {
+          ...mockAudio,
+          source: 'url',
+          data: 'https://example.com/audio.mp3',
+        };
+        const options: ProviderRequestOptions = {
+          model: 'gpt-4o-audio-preview',
+          prompt: 'Analyze this audio',
+          audio: urlAudio,
+        };
+        const body = strategy.buildRequestBody(options);
+        const userContent = body.messages[body.messages.length - 1].content;
+        const urlContent = userContent.find((c: any) => c.type === 'image_url');
+        expect(urlContent).toBeDefined();
+        expect(urlContent.image_url.url).toBe('https://example.com/audio.mp3');
+      });
+
+      it('should include the text prompt alongside audio content', () => {
+        const options: ProviderRequestOptions = {
+          model: 'gpt-4o-audio-preview',
+          prompt: 'Transcribe this audio',
+          audio: mockAudio,
+        };
+        const body = strategy.buildRequestBody(options);
+        const userContent = body.messages[body.messages.length - 1].content;
+        const textContent = userContent.find((c: any) => c.type === 'text');
+        expect(textContent).toBeDefined();
+        expect(textContent.text).toBe('Transcribe this audio');
+      });
+
+      it('should prefer audio over image when both are provided', () => {
+        const options: ProviderRequestOptions = {
+          ...mockRequestOptions, // already has an image
+          audio: mockAudio,
+        };
+        const body = strategy.buildRequestBody(options);
+        const userContent = body.messages[body.messages.length - 1].content;
+        const audioContent = userContent.find((c: any) => c.type === 'input_audio');
+        const imageContent = userContent.find((c: any) => c.type === 'image_url');
+        expect(audioContent).toBeDefined();
+        expect(imageContent).toBeUndefined();
+      });
+
+      it('should include system message when systemPrompt is set', () => {
+        const options: ProviderRequestOptions = {
+          model: 'gpt-4o-audio-preview',
+          prompt: 'Analyze',
+          audio: mockAudio,
+          systemPrompt: 'You are an audio expert.',
+        };
+        const body = strategy.buildRequestBody(options);
+        expect(body.messages[0].role).toBe('system');
+        expect(body.messages[0].content).toBe('You are an audio expert.');
+      });
+
+      it('should include model parameters in audio request', () => {
+        const options: ProviderRequestOptions = {
+          model: 'gpt-4o-audio-preview',
+          prompt: 'Analyze',
+          audio: mockAudio,
+          temperature: 0.5,
+          maxTokens: 512,
+        };
+        const body = strategy.buildRequestBody(options);
+        expect(body.temperature).toBe(0.5);
+        expect(body.max_tokens).toBe(512);
+      });
+    });
   });
 
   describe('OpenRouterStrategy', () => {
@@ -111,7 +219,9 @@ describe('Provider Strategies', () => {
 
     it('should include OpenRouter headers', () => {
       const headers = strategy.buildHeaders('test-key');
-      expect(headers['HTTP-Referer']).toBe('https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision');
+      expect(headers['HTTP-Referer']).toBe(
+        'https://github.com/alejandrosnz/n8n-nodes-universal-llm-vision'
+      );
       expect(headers['X-Title']).toBe('Universal LLM Vision n8n Node');
     });
   });
@@ -195,6 +305,44 @@ describe('Provider Strategies', () => {
       expect(metadata.usage.input_tokens).toBe(100);
       expect(metadata.usage.output_tokens).toBe(50);
       expect(metadata.finish_reason).toBe('end_turn');
+    });
+
+    describe('Audio input in buildRequestBody', () => {
+      const mockAudio: PreparedAudio = {
+        data: SMALL_AUDIO_BASE64,
+        mimeType: 'audio/mpeg',
+        format: 'mp3',
+        size: 12,
+        source: 'base64',
+      };
+
+      it('should throw when audio is present (Anthropic does not support audio)', () => {
+        const options: ProviderRequestOptions = {
+          model: 'claude-3-5-sonnet',
+          prompt: 'Analyze this audio',
+          audio: mockAudio,
+        };
+        expect(() => strategy.buildRequestBody(options)).toThrow('Anthropic');
+        expect(() => strategy.buildRequestBody(options)).toThrow('does not support audio');
+      });
+
+      it('should throw for URL audio source too', () => {
+        const urlAudio: PreparedAudio = {
+          ...mockAudio,
+          source: 'url',
+          data: 'https://example.com/a.mp3',
+        };
+        const options: ProviderRequestOptions = {
+          model: 'claude-3-5-sonnet',
+          prompt: 'Analyze',
+          audio: urlAudio,
+        };
+        expect(() => strategy.buildRequestBody(options)).toThrow('does not support audio');
+      });
+
+      it('should still work fine for image-only requests (no regression)', () => {
+        expect(() => strategy.buildRequestBody(mockRequestOptions)).not.toThrow();
+      });
     });
   });
 

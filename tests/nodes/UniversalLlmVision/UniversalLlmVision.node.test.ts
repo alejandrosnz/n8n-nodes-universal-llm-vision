@@ -9,8 +9,16 @@ import {
   getSupportedMimeTypes,
   prepareImage,
 } from '../../../nodes/UniversalLlmVision/processors/ImageProcessor';
-import { buildRequest, extractAnalysis, extractMetadata, getHeadersWithAuth } from '../../../nodes/UniversalLlmVision/utils/GenericFunctions';
-import { getProviderStrategy, getProviderOptions } from '../../../nodes/UniversalLlmVision/providers/ProviderRegistry';
+import {
+  buildRequest,
+  extractAnalysis,
+  extractMetadata,
+  getHeadersWithAuth,
+} from '../../../nodes/UniversalLlmVision/utils/GenericFunctions';
+import {
+  getProviderStrategy,
+  getProviderOptions,
+} from '../../../nodes/UniversalLlmVision/providers/ProviderRegistry';
 
 describe('UniversalLlmVision Node', () => {
   let node: UniversalLlmVision;
@@ -23,11 +31,11 @@ describe('UniversalLlmVision Node', () => {
     expect(node).toBeDefined();
     expect(node.description.displayName).toBe('Universal LLM Vision');
     expect(node.description.name).toBe('universalLlmVision');
-    expect(node.description.version).toEqual([1, 1.1]);
+    expect(node.description.version).toEqual([1, 1.1, 1.2]);
   });
 
   it('should have image source parameter with binary, url, and base64 options', () => {
-    const imageSourceParam = node.description.properties.find(p => p.name === 'imageSource');
+    const imageSourceParam = node.description.properties.find((p) => p.name === 'imageSource');
     expect(imageSourceParam).toBeDefined();
     expect(imageSourceParam?.type).toBe('options');
     const options = (imageSourceParam as any).options;
@@ -253,7 +261,9 @@ describe('Image Preparation', () => {
         mimeType: 'image/jpeg',
       };
 
-      await expect(prepareImage('binary', binaryData)).rejects.toThrow('Image size exceeds maximum');
+      await expect(prepareImage('binary', binaryData)).rejects.toThrow(
+        'Image size exceeds maximum'
+      );
     });
   });
 
@@ -278,13 +288,13 @@ describe('Image Preparation', () => {
       const unknownBase64 = 'SGVsbG8gd29ybGQ='; // "Hello world" - no magic bytes
 
       await expect(prepareImage('base64', unknownBase64)).rejects.toThrow(
-        'Could not detect image format',
+        'Could not detect image format'
       );
     });
 
     it('should validate base64 format', async () => {
       await expect(prepareImage('base64', 'not-valid-base64!!!')).rejects.toThrow(
-        'Invalid base64 format',
+        'Invalid base64 format'
       );
     });
   });
@@ -305,7 +315,7 @@ describe('Image Preparation', () => {
 
     it('should reject potentially unsafe URLs', async () => {
       await expect(prepareImage('url', 'javascript:alert(1)')).rejects.toThrow(
-        'Potentially unsafe URL detected',
+        'Potentially unsafe URL detected'
       );
     });
 
@@ -490,139 +500,137 @@ describe('Response Extraction', () => {
       expect(headers['User-Agent']).toBe('test');
       expect(headers['Authorization']).toBe('Bearer sk-test123');
     });
-  describe('prepareImage - error cases', () => {
-    it('should throw error for oversized images', async () => {
-      // Create a base64 string that represents more than 20MB
-      const largeData = Buffer.alloc(21 * 1024 * 1024).toString('base64');
+    describe('prepareImage - error cases', () => {
+      it('should throw error for oversized images', async () => {
+        // Create a base64 string that represents more than 20MB
+        const largeData = Buffer.alloc(21 * 1024 * 1024).toString('base64');
 
-      await expect(prepareImage('base64', largeData)).rejects.toThrow(
-        'Image size exceeds maximum of 20MB'
-      );
-    });
+        await expect(prepareImage('base64', largeData)).rejects.toThrow(
+          'Image size exceeds maximum of 20MB'
+        );
+      });
 
-    it('should throw error for unsupported MIME types', async () => {
-      // Create a fake image with BMP magic bytes but claim it's BMP
-      const bmpData = {
-        data: Buffer.from([0x42, 0x4D, ...Buffer.alloc(100)]).toString('base64'),
-        mimeType: 'image/bmp',
-        fileName: 'test.bmp',
-      };
+      it('should throw error for unsupported MIME types', async () => {
+        // Create a fake image with BMP magic bytes but claim it's BMP
+        const bmpData = {
+          data: Buffer.from([0x42, 0x4d, ...Buffer.alloc(100)]).toString('base64'),
+          mimeType: 'image/bmp',
+          fileName: 'test.bmp',
+        };
 
-      await expect(prepareImage('binary', bmpData)).rejects.toThrow(
-        'Unsupported image format: image/bmp'
-      );
-    });
+        await expect(prepareImage('binary', bmpData)).rejects.toThrow(
+          'Unsupported image format: image/bmp'
+        );
+      });
 
-    it('should throw error for invalid base64 in binary data', async () => {
-      const invalidData = {
-        data: 'invalid-base64!!!',
-        mimeType: 'image/jpeg',
-        fileName: 'test.jpg',
-      };
+      it('should throw error for invalid base64 in binary data', async () => {
+        const invalidData = {
+          data: 'invalid-base64!!!',
+          mimeType: 'image/jpeg',
+          fileName: 'test.jpg',
+        };
 
-      await expect(prepareImage('binary', invalidData)).rejects.toThrow(
-        'Failed to decode binary data as base64'
-      );
-    });
+        await expect(prepareImage('binary', invalidData)).rejects.toThrow(
+          'Failed to decode binary data as base64'
+        );
+      });
 
-    it('should throw error for empty binary data', async () => {
-      const emptyData = {
-        data: '',
-        mimeType: 'image/jpeg',
-        fileName: 'test.jpg',
-      };
+      it('should throw error for empty binary data', async () => {
+        const emptyData = {
+          data: '',
+          mimeType: 'image/jpeg',
+          fileName: 'test.jpg',
+        };
 
-      await expect(prepareImage('binary', emptyData)).rejects.toThrow(
-        'Binary data decoded to 0 bytes'
-      );
-    });
+        await expect(prepareImage('binary', emptyData)).rejects.toThrow(
+          'Binary data decoded to 0 bytes'
+        );
+      });
 
-    it('should throw error for invalid base64 source', async () => {
-      await expect(prepareImage('base64', 'invalid!!!')).rejects.toThrow(
-        'Invalid base64 format'
-      );
-    });
+      it('should throw error for invalid base64 source', async () => {
+        await expect(prepareImage('base64', 'invalid!!!')).rejects.toThrow('Invalid base64 format');
+      });
 
-    it('should throw error for unknown source type', async () => {
-      await expect(prepareImage('unknown' as any, 'data')).rejects.toThrow(
-        'Unknown image source type: unknown'
-      );
-    });
+      it('should throw error for unknown source type', async () => {
+        await expect(prepareImage('unknown' as any, 'data')).rejects.toThrow(
+          'Unknown image source type: unknown'
+        );
+      });
 
-    it('should throw error for binary data missing MIME type', async () => {
-      const dataWithoutMimeType = {
-        data: Buffer.from('fake image data').toString('base64'),
-        fileName: 'test.jpg',
-        // missing mimeType
-      };
+      it('should throw error for binary data missing MIME type', async () => {
+        const dataWithoutMimeType = {
+          data: Buffer.from('fake image data').toString('base64'),
+          fileName: 'test.jpg',
+          // missing mimeType
+        };
 
-      await expect(prepareImage('binary', dataWithoutMimeType)).rejects.toThrow(
-        'Binary data object is missing \'mimeType\' property'
-      );
-    });
+        await expect(prepareImage('binary', dataWithoutMimeType)).rejects.toThrow(
+          "Binary data object is missing 'mimeType' property"
+        );
+      });
 
-    it('should detect MIME type from filename when magic bytes fail', async () => {
-      // Create data with unknown magic bytes but valid filename
-      const unknownMagicBytes = Buffer.from([0x00, 0x00, 0x00, 0x00]).toString('base64');
-      const data = {
-        data: unknownMagicBytes,
-        mimeType: 'image/jpeg', // This will be overridden
-        fileName: 'test.png',
-      };
+      it('should detect MIME type from filename when magic bytes fail', async () => {
+        // Create data with unknown magic bytes but valid filename
+        const unknownMagicBytes = Buffer.from([0x00, 0x00, 0x00, 0x00]).toString('base64');
+        const data = {
+          data: unknownMagicBytes,
+          mimeType: 'image/jpeg', // This will be overridden
+          fileName: 'test.png',
+        };
 
-      const result = await prepareImage('binary', data);
-      expect(result.mimeType).toBe('image/png'); // Should use filename detection
-    });
+        const result = await prepareImage('binary', data);
+        expect(result.mimeType).toBe('image/png'); // Should use filename detection
+      });
 
-    it('should log warning when magic bytes MIME type differs from metadata', async () => {
-      // Create PNG data but claim it's JPEG in metadata
-      const pngData = Buffer.from([0x89, 0x50, 0x4e, 0x47, ...Buffer.alloc(100)]).toString('base64');
-      const data = {
-        data: pngData,
-        mimeType: 'image/jpeg', // Wrong metadata
-        fileName: 'test.jpg',
-      };
+      it('should log warning when magic bytes MIME type differs from metadata', async () => {
+        // Create PNG data but claim it's JPEG in metadata
+        const pngData = Buffer.from([0x89, 0x50, 0x4e, 0x47, ...Buffer.alloc(100)]).toString(
+          'base64'
+        );
+        const data = {
+          data: pngData,
+          mimeType: 'image/jpeg', // Wrong metadata
+          fileName: 'test.jpg',
+        };
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
-      const result = await prepareImage('binary', data);
-      expect(result.mimeType).toBe('image/png'); // Should use magic bytes
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Warning: MIME type mismatch. Metadata says image/jpeg but magic bytes indicate image/png. Using magic bytes detection.'
-      );
-      
-      consoleSpy.mockRestore();
-    });
+        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-    it('should throw error for empty decoded base64 buffer', async () => {
-      // Base64 that decodes to empty buffer
-      const emptyBase64 = Buffer.from('').toString('base64');
-      
-      await expect(prepareImage('base64', emptyBase64)).rejects.toThrow(
-        'Base64 data is empty'
-      );
-    });
+        const result = await prepareImage('binary', data);
+        expect(result.mimeType).toBe('image/png'); // Should use magic bytes
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Warning: MIME type mismatch. Metadata says image/jpeg but magic bytes indicate image/png. Using magic bytes detection.'
+        );
 
-    it('should throw error when MIME type cannot be detected', async () => {
-      // Unknown magic bytes and no filename
-      const unknownData = Buffer.from([0x00, 0x00, 0x00, 0x00]).toString('base64');
-      const data = {
-        data: unknownData,
-        mimeType: 'application/octet-stream', // No MIME type detection possible
-      };
+        consoleSpy.mockRestore();
+      });
 
-      await expect(prepareImage('binary', data)).rejects.toThrow(
-        'Unsupported image format: application/octet-stream'
-      );
-    });
+      it('should throw error for empty decoded base64 buffer', async () => {
+        // Base64 that decodes to empty buffer
+        const emptyBase64 = Buffer.from('').toString('base64');
 
-    it('should throw error for invalid URL protocol', async () => {
-      await expect(prepareImage('url', 'ftp://example.com/image.jpg')).rejects.toThrow(
-        'URL must start with http:// or https://'
-      );
+        await expect(prepareImage('base64', emptyBase64)).rejects.toThrow('Base64 data is empty');
+      });
+
+      it('should throw error when MIME type cannot be detected', async () => {
+        // Unknown magic bytes and no filename
+        const unknownData = Buffer.from([0x00, 0x00, 0x00, 0x00]).toString('base64');
+        const data = {
+          data: unknownData,
+          mimeType: 'application/octet-stream', // No MIME type detection possible
+        };
+
+        await expect(prepareImage('binary', data)).rejects.toThrow(
+          'Unsupported image format: application/octet-stream'
+        );
+      });
+
+      it('should throw error for invalid URL protocol', async () => {
+        await expect(prepareImage('url', 'ftp://example.com/image.jpg')).rejects.toThrow(
+          'URL must start with http:// or https://'
+        );
+      });
     });
   });
-});
   let mockExecuteFunctions: any;
 
   beforeEach(() => {
@@ -654,9 +662,7 @@ describe('Response Extraction', () => {
         .mockReturnValueOnce('data') // binaryPropertyName
         .mockReturnValueOnce('test.jpg'); // filename
 
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        { binary: { data: mockBinaryData } }
-      ]);
+      mockExecuteFunctions.getInputData.mockReturnValue([{ binary: { data: mockBinaryData } }]);
 
       mockExecuteFunctions.helpers.getBinaryDataBuffer.mockResolvedValue(mockBuffer);
 
@@ -673,14 +679,12 @@ describe('Response Extraction', () => {
         .mockReturnValueOnce('binary')
         .mockReturnValueOnce('data');
 
-      mockExecuteFunctions.getInputData.mockReturnValue([
-        { binary: {} }
-      ]);
+      mockExecuteFunctions.getInputData.mockReturnValue([{ binary: {} }]);
 
       const processor = new ImageProcessor(mockExecuteFunctions);
 
       await expect(processor.getPreparedImage(0)).rejects.toThrow(
-        'No binary data found in property \'data\''
+        "No binary data found in property 'data'"
       );
     });
   });
@@ -689,9 +693,7 @@ describe('Response Extraction', () => {
     it('should process URL successfully', async () => {
       const testUrl = 'https://example.com/image.jpg';
 
-      mockExecuteFunctions.getNodeParameter
-        .mockReturnValueOnce('url')
-        .mockReturnValueOnce(testUrl);
+      mockExecuteFunctions.getNodeParameter.mockReturnValueOnce('url').mockReturnValueOnce(testUrl);
 
       const processor = new ImageProcessor(mockExecuteFunctions);
       const result = await processor.getPreparedImage(0);
@@ -711,15 +713,14 @@ describe('Response Extraction', () => {
 
       const processor = new ImageProcessor(mockExecuteFunctions);
 
-      await expect(processor.getPreparedImage(0)).rejects.toThrow(
-        'Invalid image URL'
-      );
+      await expect(processor.getPreparedImage(0)).rejects.toThrow('Invalid image URL');
     });
   });
 
   describe('getPreparedImage - base64 source', () => {
     it('should process base64 data successfully', async () => {
-      const base64Data = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/AB//2Q==';
+      const base64Data =
+        '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/AB//2Q==';
 
       mockExecuteFunctions.getNodeParameter
         .mockReturnValueOnce('base64')
@@ -749,29 +750,33 @@ describe('ResponseProcessor', () => {
   describe('processResponse', () => {
     it('should process OpenAI response without metadata', () => {
       const mockResponse = {
-        choices: [{
-          message: { content: 'This is a cat' },
-          finish_reason: 'stop'
-        }],
+        choices: [
+          {
+            message: { content: 'This is a cat' },
+            finish_reason: 'stop',
+          },
+        ],
         usage: { prompt_tokens: 10, completion_tokens: 5 },
-        model: 'gpt-4-vision'
+        model: 'gpt-4-vision',
       };
 
       const result = processor.processResponse(mockResponse, 'openai', false, 'analysis');
 
       expect(result).toEqual({
-        analysis: 'This is a cat'
+        analysis: 'This is a cat',
       });
     });
 
     it('should process OpenAI response with metadata', () => {
       const mockResponse = {
-        choices: [{
-          message: { content: 'This is a dog' },
-          finish_reason: 'stop'
-        }],
+        choices: [
+          {
+            message: { content: 'This is a dog' },
+            finish_reason: 'stop',
+          },
+        ],
         usage: { prompt_tokens: 15, completion_tokens: 8 },
-        model: 'gpt-4-vision'
+        model: 'gpt-4-vision',
       };
 
       const result = processor.processResponse(mockResponse, 'openai', true, 'result');
@@ -781,8 +786,8 @@ describe('ResponseProcessor', () => {
         metadata: {
           model: 'gpt-4-vision',
           usage: { input_tokens: 15, output_tokens: 8 },
-          finish_reason: 'stop'
-        }
+          finish_reason: 'stop',
+        },
       });
     });
 
@@ -791,13 +796,13 @@ describe('ResponseProcessor', () => {
         content: [{ text: 'This is a bird' }],
         usage: { input_tokens: 20, output_tokens: 10 },
         model: 'claude-3-sonnet',
-        stop_reason: 'end_turn'
+        stop_reason: 'end_turn',
       };
 
       const result = processor.processResponse(mockResponse, 'anthropic', false, 'analysis');
 
       expect(result).toEqual({
-        analysis: 'This is a bird'
+        analysis: 'This is a bird',
       });
     });
   });
@@ -822,35 +827,46 @@ describe('Integration Tests - Execute Method', () => {
 
   it('should process binary image successfully', async () => {
     // Mock credentials
-    mockExecuteFunctions.getCredentials
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
+    mockExecuteFunctions.getCredentials.mockResolvedValueOnce({
+      apiKey: 'sk-test',
+      provider: 'openai',
+    });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
-      { 
-        json: { id: 1 }, 
-        binary: { 
+      {
+        json: { id: 1 },
+        binary: {
           data: {
             data: Buffer.from('fake image data').toString('base64'),
             mimeType: 'image/jpeg',
             fileName: 'test.jpg',
-          }
-        } 
-      }
+          },
+        },
+      },
     ]);
 
     // Mock parameters
     mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
       switch (param) {
-        case 'model': return 'gpt-4-vision';
-        case 'imageSource': return 'binary';
-        case 'prompt': return 'Describe this image';
-        case 'modelParameters': return {};
-        case 'advancedOptions': return { includeMetadata: false };
-        case 'outputPropertyName': return 'analysis';
-        case 'binaryPropertyName': return 'data';
-        case 'filename': return 'test.jpg';
-        default: return undefined;
+        case 'model':
+          return 'gpt-4-vision';
+        case 'imageSource':
+          return 'binary';
+        case 'prompt':
+          return 'Describe this image';
+        case 'modelParameters':
+          return {};
+        case 'advancedOptions':
+          return { includeMetadata: false };
+        case 'outputPropertyName':
+          return 'analysis';
+        case 'binaryPropertyName':
+          return 'data';
+        case 'filename':
+          return 'test.jpg';
+        default:
+          return undefined;
       }
     });
 
@@ -862,7 +878,7 @@ describe('Integration Tests - Execute Method', () => {
     const mockApiResponse = {
       choices: [{ message: { content: 'A beautiful landscape' } }],
       usage: { prompt_tokens: 10, completion_tokens: 5 },
-      model: 'gpt-4-vision'
+      model: 'gpt-4-vision',
     };
     mockExecuteFunctions.helpers.request.mockResolvedValue(mockApiResponse);
 
@@ -873,27 +889,29 @@ describe('Integration Tests - Execute Method', () => {
     expect(result[0]).toHaveLength(1);
     expect(result[0][0].json).toEqual({
       id: 1,
-      analysis: 'A beautiful landscape'
+      analysis: 'A beautiful landscape',
     });
   });
 
   it('should handle API errors gracefully when continueOnFail is true', async () => {
     // Mock credentials
-    mockExecuteFunctions.getCredentials
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
+    mockExecuteFunctions.getCredentials.mockResolvedValueOnce({
+      apiKey: 'sk-test',
+      provider: 'openai',
+    });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
-      { 
-        json: { id: 1 }, 
-        binary: { 
+      {
+        json: { id: 1 },
+        binary: {
           data: {
             data: Buffer.from('fake image data').toString('base64'),
             mimeType: 'image/jpeg',
             fileName: 'test.jpg',
-          }
-        } 
-      }
+          },
+        },
+      },
     ]);
 
     // Mock continueOnFail
@@ -902,15 +920,24 @@ describe('Integration Tests - Execute Method', () => {
     // Mock parameters
     mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
       switch (param) {
-        case 'model': return 'gpt-4-vision';
-        case 'imageSource': return 'binary';
-        case 'prompt': return 'Describe this image';
-        case 'modelParameters': return {};
-        case 'advancedOptions': return { includeMetadata: false };
-        case 'outputPropertyName': return 'analysis';
-        case 'binaryPropertyName': return 'data';
-        case 'filename': return 'test.jpg';
-        default: return undefined;
+        case 'model':
+          return 'gpt-4-vision';
+        case 'imageSource':
+          return 'binary';
+        case 'prompt':
+          return 'Describe this image';
+        case 'modelParameters':
+          return {};
+        case 'advancedOptions':
+          return { includeMetadata: false };
+        case 'outputPropertyName':
+          return 'analysis';
+        case 'binaryPropertyName':
+          return 'data';
+        case 'filename':
+          return 'test.jpg';
+        default:
+          return undefined;
       }
     });
 
@@ -931,21 +958,23 @@ describe('Integration Tests - Execute Method', () => {
 
   it('should throw error when continueOnFail is false', async () => {
     // Mock credentials
-    mockExecuteFunctions.getCredentials
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
+    mockExecuteFunctions.getCredentials.mockResolvedValueOnce({
+      apiKey: 'sk-test',
+      provider: 'openai',
+    });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
-      { 
-        json: { id: 1 }, 
-        binary: { 
+      {
+        json: { id: 1 },
+        binary: {
           data: {
             data: Buffer.from('fake image data').toString('base64'),
             mimeType: 'image/jpeg',
             fileName: 'test.jpg',
-          }
-        } 
-      }
+          },
+        },
+      },
     ]);
 
     // Mock continueOnFail
@@ -954,15 +983,24 @@ describe('Integration Tests - Execute Method', () => {
     // Mock parameters
     mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
       switch (param) {
-        case 'model': return 'gpt-4-vision';
-        case 'imageSource': return 'binary';
-        case 'prompt': return 'Describe this image';
-        case 'modelParameters': return {};
-        case 'advancedOptions': return { includeMetadata: false };
-        case 'outputPropertyName': return 'analysis';
-        case 'binaryPropertyName': return 'data';
-        case 'filename': return 'test.jpg';
-        default: return undefined;
+        case 'model':
+          return 'gpt-4-vision';
+        case 'imageSource':
+          return 'binary';
+        case 'prompt':
+          return 'Describe this image';
+        case 'modelParameters':
+          return {};
+        case 'advancedOptions':
+          return { includeMetadata: false };
+        case 'outputPropertyName':
+          return 'analysis';
+        case 'binaryPropertyName':
+          return 'data';
+        case 'filename':
+          return 'test.jpg';
+        default:
+          return undefined;
       }
     });
 
@@ -974,41 +1012,54 @@ describe('Integration Tests - Execute Method', () => {
     mockExecuteFunctions.helpers.request.mockRejectedValue(new Error('API rate limit exceeded'));
 
     const node = new UniversalLlmVision();
-    await expect(node.execute.call(mockExecuteFunctions)).rejects.toThrow('API rate limit exceeded');
+    await expect(node.execute.call(mockExecuteFunctions)).rejects.toThrow(
+      'API rate limit exceeded'
+    );
   });
 
   it('should use universal credentials successfully', async () => {
     // Mock getCredentials to return universalLlmVisionApi credentials
-    mockExecuteFunctions.getCredentials
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
+    mockExecuteFunctions.getCredentials.mockResolvedValueOnce({
+      apiKey: 'sk-test',
+      provider: 'openai',
+    });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
-      { 
-        json: { id: 1 }, 
-        binary: { 
+      {
+        json: { id: 1 },
+        binary: {
           data: {
             data: Buffer.from('fake image data').toString('base64'),
             mimeType: 'image/jpeg',
             fileName: 'test.jpg',
-          }
-        } 
-      }
+          },
+        },
+      },
     ]);
 
     // Mock parameters
     mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
       switch (param) {
-        case 'model': return 'gpt-4-vision';
-        case 'imageSource': return 'binary';
-        case 'prompt': return 'Describe this image';
-        case 'modelParameters': return {};
-        case 'advancedOptions': return { includeMetadata: false };
-        case 'outputPropertyName': return 'analysis';
-        
-        case 'binaryPropertyName': return 'data';
-        case 'filename': return 'test.jpg';
-        default: return undefined;
+        case 'model':
+          return 'gpt-4-vision';
+        case 'imageSource':
+          return 'binary';
+        case 'prompt':
+          return 'Describe this image';
+        case 'modelParameters':
+          return {};
+        case 'advancedOptions':
+          return { includeMetadata: false };
+        case 'outputPropertyName':
+          return 'analysis';
+
+        case 'binaryPropertyName':
+          return 'data';
+        case 'filename':
+          return 'test.jpg';
+        default:
+          return undefined;
       }
     });
 
@@ -1020,7 +1071,7 @@ describe('Integration Tests - Execute Method', () => {
     const mockApiResponse = {
       choices: [{ message: { content: 'A beautiful landscape' } }],
       usage: { prompt_tokens: 10, completion_tokens: 5 },
-      model: 'gpt-4-vision'
+      model: 'gpt-4-vision',
     };
     mockExecuteFunctions.helpers.request.mockResolvedValue(mockApiResponse);
 
@@ -1031,42 +1082,53 @@ describe('Integration Tests - Execute Method', () => {
     expect(result[0]).toHaveLength(1);
     expect(result[0][0].json).toEqual({
       id: 1,
-      analysis: 'A beautiful landscape'
+      analysis: 'A beautiful landscape',
     });
   });
 
   it('should correctly read provider from universal credentials', async () => {
     // Mock getCredentials to return universalLlmVisionApi credentials with provider field
-    mockExecuteFunctions.getCredentials
-      .mockResolvedValueOnce({ apiKey: 'sk-test', provider: 'openai' });
+    mockExecuteFunctions.getCredentials.mockResolvedValueOnce({
+      apiKey: 'sk-test',
+      provider: 'openai',
+    });
 
     // Mock input data
     mockExecuteFunctions.getInputData.mockReturnValue([
-      { 
-        json: { id: 1 }, 
-        binary: { 
+      {
+        json: { id: 1 },
+        binary: {
           data: {
             data: Buffer.from('fake image data').toString('base64'),
             mimeType: 'image/jpeg',
             fileName: 'test.jpg',
-          }
-        } 
-      }
+          },
+        },
+      },
     ]);
 
     // Mock parameters
     mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
       switch (param) {
-        case 'model': return 'gpt-4-vision';
-        case 'imageSource': return 'binary';
-        case 'prompt': return 'Describe this image';
-        case 'modelParameters': return {};
-        case 'advancedOptions': return { includeMetadata: false };
-        case 'outputPropertyName': return 'analysis';
-        
-        case 'binaryPropertyName': return 'data';
-        case 'filename': return 'test.jpg';
-        default: return undefined;
+        case 'model':
+          return 'gpt-4-vision';
+        case 'imageSource':
+          return 'binary';
+        case 'prompt':
+          return 'Describe this image';
+        case 'modelParameters':
+          return {};
+        case 'advancedOptions':
+          return { includeMetadata: false };
+        case 'outputPropertyName':
+          return 'analysis';
+
+        case 'binaryPropertyName':
+          return 'data';
+        case 'filename':
+          return 'test.jpg';
+        default:
+          return undefined;
       }
     });
 
@@ -1078,7 +1140,7 @@ describe('Integration Tests - Execute Method', () => {
     const mockApiResponse = {
       choices: [{ message: { content: 'A beautiful landscape' } }],
       usage: { prompt_tokens: 10, completion_tokens: 5 },
-      model: 'gpt-4-vision'
+      model: 'gpt-4-vision',
     };
     mockExecuteFunctions.helpers.request.mockResolvedValue(mockApiResponse);
 
@@ -1089,7 +1151,7 @@ describe('Integration Tests - Execute Method', () => {
     expect(result[0]).toHaveLength(1);
     expect(result[0][0].json).toEqual({
       id: 1,
-      analysis: 'A beautiful landscape'
+      analysis: 'A beautiful landscape',
     });
     // Verify getCredentials was called only once for universalLlmVisionApi
     expect(mockExecuteFunctions.getCredentials).toHaveBeenCalledWith('universalLlmVisionApi');
@@ -1100,10 +1162,10 @@ describe('Integration Tests - Execute Method', () => {
 describe('Authentication header protection', () => {
   it('should not allow customHeaders to override Authorization header', () => {
     const { getHeaders } = require('../../../nodes/UniversalLlmVision/utils/providers');
-    
+
     const apiKey = 'test-api-key-123';
     const customHeaders = {
-      'Authorization': 'Bearer wrong-key',
+      Authorization: 'Bearer wrong-key',
       'X-Custom-Header': 'custom-value',
     };
 
@@ -1117,7 +1179,7 @@ describe('Authentication header protection', () => {
 
   it('should not allow customHeaders to override x-api-key header for Anthropic', () => {
     const { getHeaders } = require('../../../nodes/UniversalLlmVision/utils/providers');
-    
+
     const apiKey = 'test-api-key-456';
     const customHeaders = {
       'x-api-key': 'wrong-key',
@@ -1134,7 +1196,7 @@ describe('Authentication header protection', () => {
 
   it('should preserve authentication when custom headers are provided with binary filename', () => {
     const { getHeaders } = require('../../../nodes/UniversalLlmVision/utils/providers');
-    
+
     // Simulate the scenario from the bug report: OpenRouter with custom headers
     const apiKey = 'openrouter-api-key';
     const customHeadersRecord = {
@@ -1153,4 +1215,3 @@ describe('Authentication header protection', () => {
     expect(headers['Content-Type']).toBe('application/json');
   });
 });
-

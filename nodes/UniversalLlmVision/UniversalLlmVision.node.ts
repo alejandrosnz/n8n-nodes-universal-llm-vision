@@ -7,21 +7,31 @@ import type {
   INodeTypeDescription,
 } from 'n8n-workflow';
 import { ImageProcessor } from './processors/ImageProcessor';
+import { AudioProcessor } from './processors/AudioProcessor';
 import { ResponseProcessor } from './processors/ResponseProcessor';
 import { RequestHandler } from './handlers/RequestHandler';
-import { DEFAULT_MODEL_PARAMETERS, VISION_DEFAULTS } from './constants/config';
+import { DEFAULT_MODEL_PARAMETERS, UNIVERSAL_DEFAULTS } from './constants/config';
 import { detectCredentials } from './utils/GenericFunctions';
 import { loadModelsForDropdown } from './utils/ModelLoader';
 import {
-	IMAGE_SOURCE_PARAMETER,
-	BINARY_PROPERTY_PARAMETER,
-	FILENAME_PARAMETER,
-	IMAGE_URL_PARAMETER,
-	BASE64_DATA_PARAMETER,
-	BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
-	PROMPT_PARAMETER,
-	IMAGE_DETAIL_PARAMETER,
+  IMAGE_SOURCE_PARAMETER,
+  BINARY_PROPERTY_PARAMETER,
+  FILENAME_PARAMETER,
+  IMAGE_URL_PARAMETER,
+  BASE64_DATA_PARAMETER,
+  BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
+  PROMPT_PARAMETER,
+  IMAGE_DETAIL_PARAMETER,
 } from './constants/imageParameters';
+import {
+  AUDIO_SOURCE_PARAMETER,
+  AUDIO_BINARY_PROPERTY_PARAMETER,
+  AUDIO_FILENAME_PARAMETER,
+  AUDIO_URL_PARAMETER,
+  AUDIO_BASE64_DATA_PARAMETER,
+  AUDIO_MIME_TYPE_PARAMETER,
+  AUDIO_PROMPT_PARAMETER,
+} from './constants/audioParameters';
 
 export class UniversalLlmVision implements INodeType {
   description: INodeTypeDescription = {
@@ -29,10 +39,12 @@ export class UniversalLlmVision implements INodeType {
     name: 'universalLlmVision',
     icon: 'file:icon.svg',
     group: ['transform'],
-    version: [1, 1.1],
-    defaultVersion: 1.1,
-    subtitle: '={{$parameter["model"] + " - " + $parameter["imageSource"]}}',
-      description: 'Analyze images using multiple LLM vision providers (OpenRouter, Groq, Grok, OpenAI, Anthropic, Google Gemini)',
+    version: [1, 1.1, 1.2],
+    defaultVersion: 1.2,
+    subtitle:
+      '={{($parameter["resource"] === "analyzeAudio" ? "Audio" : $parameter["imageSource"]) + " · " + $parameter["model"]}}',
+    description:
+      'Analyze images and audio using multiple LLM providers (OpenRouter, Groq, Grok, OpenAI, Anthropic, Google Gemini)',
     defaults: {
       name: 'Universal LLM Vision',
     },
@@ -46,7 +58,38 @@ export class UniversalLlmVision implements INodeType {
       },
     ],
     properties: [
-      // Version 1: Simple string input
+      // ─────────────────────────────────────────────────────────────────
+      // Resource selector (v1.2 only)
+      // ─────────────────────────────────────────────────────────────────
+      {
+        displayName: 'Resource',
+        name: 'resource',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+          },
+        },
+        options: [
+          {
+            name: 'Analyze Image',
+            value: 'analyzeImage',
+            description: 'Send an image + prompt to an LLM vision model',
+          },
+          {
+            name: 'Analyze Audio',
+            value: 'analyzeAudio',
+            description:
+              'Send an audio file + prompt to a multimodal LLM (e.g. GPT-4o audio, Gemini)',
+          },
+        ],
+        default: 'analyzeImage',
+      },
+
+      // ─────────────────────────────────────────────────────────────────
+      // Model — Version 1: plain string
+      // ─────────────────────────────────────────────────────────────────
       {
         displayName: 'Model',
         name: 'model',
@@ -59,9 +102,10 @@ export class UniversalLlmVision implements INodeType {
         required: true,
         default: '',
         placeholder: 'e.g., gpt-5-nano, gemini-3.0-flash',
-        description: 'Vision-capable model ID for the selected provider (e.g., gpt-5-nano, gemini-3.0-flash)',
+        description:
+          'Vision-capable model ID for the selected provider (e.g., gpt-5-nano, gemini-3.0-flash)',
       },
-      // Version 1.1: Dynamic dropdown with auto-fetch
+      // Model — Version 1.1: dynamic dropdown, image resource only
       {
         displayName: 'Model',
         name: 'model',
@@ -77,19 +121,157 @@ export class UniversalLlmVision implements INodeType {
         },
         required: false,
         default: '',
-        description: 'Vision-capable model for the selected provider. List is fetched automatically. To enter a model ID manually (e.g., for custom providers), use "Manual Model ID" in Advanced Options.',
+        description:
+          'Vision-capable model for the selected provider. List is fetched automatically. To enter a model ID manually (e.g., for custom providers), use "Manual Model ID" in Advanced Options.',
+      },
+      // Model — Version 1.2: dynamic dropdown (image + audio)
+      {
+        displayName: 'Model',
+        name: 'model',
+        type: 'options',
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+          },
+        },
+        typeOptions: {
+          loadOptionsMethod: 'getModels',
+          allowCustomValue: true,
+        },
+        required: false,
+        default: '',
+        description:
+          'Model for the selected provider. List is fetched automatically. Use "Manual Model ID" in Advanced Options to enter a model ID directly (e.g., gpt-4o-audio-preview for audio).',
       },
 
-      // Image Input Configuration (using shared parameters)
-      IMAGE_SOURCE_PARAMETER,
-      BINARY_PROPERTY_PARAMETER,
-      FILENAME_PARAMETER,
-      IMAGE_URL_PARAMETER,
-      BASE64_DATA_PARAMETER,
-      BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
-      PROMPT_PARAMETER,
+      // ─────────────────────────────────────────────────────────────────
+      // IMAGE parameters — shown for v1/v1.1 always, and for v1.2 only
+      // when resource === 'analyzeImage'.
+      // We spread the shared constants and add the hide condition inline.
+      // ─────────────────────────────────────────────────────────────────
+      {
+        ...IMAGE_SOURCE_PARAMETER,
+        displayOptions: {
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
+      {
+        ...BINARY_PROPERTY_PARAMETER,
+        displayOptions: {
+          show: { imageSource: ['binary'] },
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
+      {
+        ...FILENAME_PARAMETER,
+        displayOptions: {
+          show: { imageSource: ['binary'] },
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
+      {
+        ...IMAGE_URL_PARAMETER,
+        displayOptions: {
+          show: { imageSource: ['url'] },
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
+      {
+        ...BASE64_DATA_PARAMETER,
+        displayOptions: {
+          show: { imageSource: ['base64'] },
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
+      {
+        ...BASE64_MIME_TYPE_PARAMETER_WITH_OPTIONS,
+        displayOptions: {
+          show: { imageSource: ['base64'] },
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
+      {
+        ...PROMPT_PARAMETER,
+        displayOptions: {
+          hide: { resource: ['analyzeAudio'] },
+        },
+      },
 
-      // Model configuration
+      // ─────────────────────────────────────────────────────────────────
+      // AUDIO parameters — shown only for v1.2 when resource === 'analyzeAudio'
+      // ─────────────────────────────────────────────────────────────────
+      {
+        ...AUDIO_SOURCE_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+          },
+        },
+      },
+      {
+        ...AUDIO_BINARY_PROPERTY_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+            audioSource: ['binary'],
+          },
+        },
+      },
+      {
+        ...AUDIO_FILENAME_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+            audioSource: ['binary'],
+          },
+        },
+      },
+      {
+        ...AUDIO_URL_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+            audioSource: ['url'],
+          },
+        },
+      },
+      {
+        ...AUDIO_BASE64_DATA_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+            audioSource: ['base64'],
+          },
+        },
+      },
+      {
+        ...AUDIO_MIME_TYPE_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+            audioSource: ['base64'],
+          },
+        },
+      },
+      {
+        ...AUDIO_PROMPT_PARAMETER,
+        displayOptions: {
+          show: {
+            '@version': [1.2],
+            resource: ['analyzeAudio'],
+          },
+        },
+      },
+
+      // ─────────────────────────────────────────────────────────────────
+      // Model parameters (image detail is image-only; the rest apply to both)
+      // ─────────────────────────────────────────────────────────────────
       {
         displayName: 'Model Parameters',
         name: 'modelParameters',
@@ -107,7 +289,8 @@ export class UniversalLlmVision implements INodeType {
               numberPrecision: 2,
             },
             default: DEFAULT_MODEL_PARAMETERS.temperature,
-            description: 'Randomness level. Use 0.2 for factual analysis (recommended), 0.7+ for creative descriptions',
+            description:
+              'Randomness level. Use 0.2 for factual analysis (recommended), 0.7+ for creative descriptions',
           },
           {
             displayName: 'Max Tokens',
@@ -128,11 +311,15 @@ export class UniversalLlmVision implements INodeType {
             default: DEFAULT_MODEL_PARAMETERS.topP,
             description: 'Nucleus sampling. Keep at 0.9 for best results (default)',
           },
-          IMAGE_DETAIL_PARAMETER,
+          {
+            ...IMAGE_DETAIL_PARAMETER,
+          },
         ],
       },
 
+      // ─────────────────────────────────────────────────────────────────
       // Advanced options
+      // ─────────────────────────────────────────────────────────────────
       {
         displayName: 'Advanced Options',
         name: 'advancedOptions',
@@ -145,21 +332,17 @@ export class UniversalLlmVision implements INodeType {
             name: 'manualModelId',
             type: 'string',
             default: '',
-            placeholder: 'e.g., gpt-5-nano, gemini-3.0-flash',
-            description: 'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
-            displayOptions: {
-              show: {
-                '@version': [1.1],
-              },
-            },
+            placeholder: 'e.g., gpt-4o-audio-preview, gemini-2.0-flash',
+            description:
+              'Manually specify a model ID. When provided, this overrides the automatic Model selection. Use this for custom providers or when automatic fetching fails.',
           },
           {
             displayName: 'System Prompt',
             name: 'systemPrompt',
             type: 'string',
             typeOptions: { rows: 8 },
-            default: VISION_DEFAULTS.SYSTEM_PROMPT,
-            description: 'System instructions for the model (overrides defaults)',
+            default: UNIVERSAL_DEFAULTS.SYSTEM_PROMPT,
+            description: 'System instructions for the model (uses default if empty)',
           },
           {
             displayName: 'Response Format',
@@ -219,7 +402,9 @@ export class UniversalLlmVision implements INodeType {
         ],
       },
 
+      // ─────────────────────────────────────────────────────────────────
       // Output configuration
+      // ─────────────────────────────────────────────────────────────────
       {
         displayName: 'Output Property Name',
         name: 'outputPropertyName',
@@ -233,16 +418,14 @@ export class UniversalLlmVision implements INodeType {
   methods = {
     loadOptions: {
       /**
-       * Fetch available vision-capable models from models.dev API or provider API
+       * Fetch available vision/audio-capable models from models.dev API or provider API
        * @param this - The load options context provided by n8n
        * @returns Promise<INodePropertyOptions[]> - Array of model options
        */
       async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         try {
           // Detect configured credentials to get the selected provider
-          const credInfo = await detectCredentials(
-            (type: string) => this.getCredentials(type),
-          );
+          const credInfo = await detectCredentials((type: string) => this.getCredentials(type));
 
           // Load models based on provider type (custom provider API or models.dev)
           return loadModelsForDropdown(credInfo, this.helpers.httpRequest);
@@ -262,7 +445,7 @@ export class UniversalLlmVision implements INodeType {
 
   /**
    * Execute the Universal LLM Vision node
-   * Processes images through various LLM vision providers (OpenAI, Anthropic, Groq, etc.)
+   * Processes images or audio through various LLM providers (OpenAI, Anthropic, Groq, etc.)
    * @param this - The execution context provided by n8n
    * @returns Promise<INodeExecutionData[][]> - Array of processed items with analysis results
    */
@@ -272,38 +455,41 @@ export class UniversalLlmVision implements INodeType {
     const returnData: INodeExecutionData[] = [];
 
     // Detect configured credentials
-    const credInfo = await detectCredentials(
-      (type: string) => this.getCredentials(type),
-    );
+    const credInfo = await detectCredentials((type: string) => this.getCredentials(type));
 
     const { credentials, credentialName, provider, apiKey, customBaseUrl } = credInfo;
 
     // Process each input item
     for (let i = 0; i < items.length; i++) {
       try {
-        // Extract node parameters for this item
         const nodeVersion = this.getNode().typeVersion;
+
+        // Resolve resource — 'analyzeImage' for v1/v1.1 (no resource param), or from parameter for v1.2
+        const resource =
+          nodeVersion >= 1.2
+            ? (this.getNodeParameter('resource', i, 'analyzeImage') as string)
+            : 'analyzeImage';
+
         const advancedOptions = this.getNodeParameter('advancedOptions', i) as any;
-        const manualModelId = nodeVersion >= 1.1 ? (advancedOptions.manualModelId as string || '').trim() : '';
-        
-        // Prioritize manual model ID if provided (v1.1+), otherwise use model from parameter
-        const model = manualModelId !== '' 
-          ? manualModelId
-          : (this.getNodeParameter('model', i, '') as string);
-        
-        // Validate model ID is provided
+        const manualModelId =
+          nodeVersion >= 1.1 ? ((advancedOptions.manualModelId as string) || '').trim() : '';
+
+        // Prioritize manual model ID if provided (v1.1+), otherwise use dropdown
+        const model =
+          manualModelId !== '' ? manualModelId : (this.getNodeParameter('model', i, '') as string);
+
         if (!model || model.trim() === '') {
-          throw new Error('Model is required. Please select a model from the dropdown or specify a "Manual Model ID" in Advanced Options.');
+          const hint =
+            resource === 'analyzeAudio'
+              ? 'For audio, try models like gpt-4o-audio-preview or gemini-2.0-flash.'
+              : 'Please select a model from the dropdown or specify a "Manual Model ID" in Advanced Options.';
+          throw new Error(`Model is required. ${hint}`);
         }
-        
+
         const prompt = this.getNodeParameter('prompt', i) as string;
         const modelParameters = this.getNodeParameter('modelParameters', i) as any;
         const outputPropertyName = this.getNodeParameter('outputPropertyName', i) as string;
         const includeMetadata = advancedOptions.includeMetadata || false;
-
-        // Prepare image data using ImageProcessor
-        const imageProcessor = new ImageProcessor(this);
-        const preparedImage = await imageProcessor.getPreparedImage(i);
 
         // Build custom headers
         const customHeadersRecord: Record<string, string> = {};
@@ -324,28 +510,75 @@ export class UniversalLlmVision implements INodeType {
           }
         }
 
-        // Execute request using RequestHandler
         const requestHandler = new RequestHandler(this);
-        const response = await requestHandler.executeRequest(
-          provider,
-          apiKey,
-          customBaseUrl,
-          customHeadersRecord,
-          model,
-          preparedImage,
-          prompt,
-          modelParameters,
-          advancedOptions
-        );
-
-        // Process response using ResponseProcessor
         const responseProcessor = new ResponseProcessor();
-        const result = responseProcessor.processResponse(response, provider, includeMetadata, outputPropertyName);
 
-        returnData.push({
-          json: { ...items[i].json, ...result },
-          binary: items[i].binary,
-        });
+        // ── Route by resource ──────────────────────────────────────────
+        if (resource === 'analyzeAudio') {
+          // Audio analysis
+          const audioProcessor = new AudioProcessor(this);
+          const preparedAudio = await audioProcessor.getPreparedAudio(i);
+
+          // Use universal system prompt if none provided
+          const audioOptions = {
+            ...advancedOptions,
+            systemPrompt: advancedOptions.systemPrompt || UNIVERSAL_DEFAULTS.SYSTEM_PROMPT,
+          };
+
+          const response = await requestHandler.executeRequest(
+            provider,
+            apiKey,
+            customBaseUrl,
+            customHeadersRecord,
+            model,
+            undefined, // no image
+            preparedAudio,
+            prompt,
+            modelParameters,
+            audioOptions
+          );
+
+          const result = responseProcessor.processResponse(
+            response,
+            provider,
+            includeMetadata,
+            outputPropertyName
+          );
+
+          returnData.push({
+            json: { ...items[i].json, ...result },
+            binary: items[i].binary,
+          });
+        } else {
+          // Image analysis (default, all versions)
+          const imageProcessor = new ImageProcessor(this);
+          const preparedImage = await imageProcessor.getPreparedImage(i);
+
+          const response = await requestHandler.executeRequest(
+            provider,
+            apiKey,
+            customBaseUrl,
+            customHeadersRecord,
+            model,
+            preparedImage,
+            undefined, // no audio
+            prompt,
+            modelParameters,
+            advancedOptions
+          );
+
+          const result = responseProcessor.processResponse(
+            response,
+            provider,
+            includeMetadata,
+            outputPropertyName
+          );
+
+          returnData.push({
+            json: { ...items[i].json, ...result },
+            binary: items[i].binary,
+          });
+        }
       } catch (error) {
         if (this.continueOnFail()) {
           returnData.push({

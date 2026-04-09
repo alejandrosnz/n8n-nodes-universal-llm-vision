@@ -5,8 +5,13 @@
 
 import type { IHttpRequestMethods, IHttpRequestOptions } from 'n8n-workflow';
 import type { PreparedImage } from '../processors/ImageProcessor';
+import type { PreparedAudio } from '../processors/AudioProcessor';
 import { getProvider } from '../providers/ProviderRegistry';
-import type { IProviderStrategy, ProviderRequestOptions, ModelInfo } from '../providers/IProviderStrategy';
+import type {
+  IProviderStrategy,
+  ProviderRequestOptions,
+  ModelInfo,
+} from '../providers/IProviderStrategy';
 
 export interface UniversalLlmVisionCredentials {
   provider: string;
@@ -28,7 +33,10 @@ export interface RequestBuildOptions {
   provider: string;
   model: string;
   prompt: string;
-  image: PreparedImage;
+  /** Image data — present when resource is 'analyzeImage' */
+  image?: PreparedImage;
+  /** Audio data — present when resource is 'analyzeAudio' */
+  audio?: PreparedAudio;
   imageDetail?: string;
   temperature?: number;
   maxTokens?: number;
@@ -50,10 +58,12 @@ export interface RequestBuilt {
  * @returns Promise<CredentialInfo> - Credential information with provider type
  */
 export async function detectCredentials(
-  getCredentialsFn: (type: string) => Promise<any>,
+  getCredentialsFn: (type: string) => Promise<any>
 ): Promise<CredentialInfo> {
   // Get Universal LLM Vision API credentials
-  const credentials = await getCredentialsFn('universalLlmVisionApi') as UniversalLlmVisionCredentials;
+  const credentials = (await getCredentialsFn(
+    'universalLlmVisionApi'
+  )) as UniversalLlmVisionCredentials;
 
   // Extract provider type from credential selector
   const provider = credentials.provider || 'openai';
@@ -82,7 +92,7 @@ export function buildRequest(
   options: RequestBuildOptions,
   apiKey: string,
   customBaseUrl?: string,
-  customHeaders?: Record<string, string>,
+  customHeaders?: Record<string, string>
 ): RequestBuilt {
   const strategy = getProvider(options.provider, customBaseUrl);
 
@@ -91,6 +101,7 @@ export function buildRequest(
     model: options.model,
     prompt: options.prompt,
     image: options.image,
+    audio: options.audio,
     imageDetail: options.imageDetail,
     temperature: options.temperature,
     maxTokens: options.maxTokens,
@@ -154,7 +165,7 @@ export function extractMetadata(provider: string, response: any): Record<string,
 export function getHeadersWithAuth(
   provider: string,
   apiKey: string,
-  customHeaders?: Record<string, string>,
+  customHeaders?: Record<string, string>
 ): Record<string, string> {
   const strategy = getProvider(provider);
   const headers = strategy.buildHeaders(apiKey);
@@ -178,7 +189,10 @@ export function getHeadersWithAuth(
  * @param customBaseUrl - Optional custom base URL
  * @returns IProviderStrategy - Strategy instance for the provider
  */
-export function getProviderStrategy(providerName: string, customBaseUrl?: string): IProviderStrategy {
+export function getProviderStrategy(
+  providerName: string,
+  customBaseUrl?: string
+): IProviderStrategy {
   return getProvider(providerName, customBaseUrl);
 }
 
@@ -201,7 +215,7 @@ function sleep(ms: number): Promise<void> {
 async function fetchWithRetry(
   httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
   requestOptions: IHttpRequestOptions,
-  maxAttempts: number = 3,
+  maxAttempts: number = 3
 ): Promise<any> {
   let lastError: Error | null = null;
 
@@ -234,14 +248,14 @@ async function fetchWithRetry(
  */
 export async function fetchAllVisionModels(
   httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
-  providerFilter?: string,
+  providerFilter?: string
 ): Promise<ModelInfo[]> {
   try {
     const requestOptions: IHttpRequestOptions = {
       method: 'GET' as IHttpRequestMethods,
       url: 'https://models.dev/api.json',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       json: true,
       timeout: 15000, // 15 second timeout
@@ -325,7 +339,7 @@ export async function fetchProviderModels(
   provider: string,
   apiKey: string,
   customBaseUrl: string | undefined,
-  httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
+  httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>
 ): Promise<ModelInfo[]> {
   try {
     const strategy = getProvider(provider, customBaseUrl);

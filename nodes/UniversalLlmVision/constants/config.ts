@@ -16,6 +16,18 @@ export const IMAGE_SIZE_LIMIT_MB = 20;
 export const IMAGE_SIZE_LIMIT_BYTES = IMAGE_SIZE_LIMIT_MB * 1024 * 1024;
 
 /**
+ * Audio Size Limit in MB
+ * Maximum allowed audio size for processing
+ */
+export const AUDIO_SIZE_LIMIT_MB = 25;
+
+/**
+ * Audio Size Limit in Bytes
+ * Maximum allowed audio size in bytes (25MB)
+ */
+export const AUDIO_SIZE_LIMIT_BYTES = AUDIO_SIZE_LIMIT_MB * 1024 * 1024;
+
+/**
  * Request Timeout in Milliseconds
  * Maximum time to wait for API response
  */
@@ -32,6 +44,63 @@ export const BASE64_REGEX = /^[A-Za-z0-9+/]*={0,2}$/;
  * Fallback MIME type when detection fails
  */
 export const DEFAULT_MIME_TYPE = 'application/octet-stream';
+
+/**
+ * Supported Audio Formats
+ * Maps MIME type to file extension and the format name expected by OpenAI audio API
+ */
+export const SUPPORTED_AUDIO_FORMATS = {
+  mp3: {
+    extension: 'mp3',
+    mimeType: 'audio/mpeg',
+    format: 'mp3',
+  },
+  mp3alt: {
+    extension: 'mp3',
+    mimeType: 'audio/mp3',
+    format: 'mp3',
+  },
+  wav: {
+    extension: 'wav',
+    mimeType: 'audio/wav',
+    format: 'wav',
+  },
+  wavx: {
+    extension: 'wav',
+    mimeType: 'audio/x-wav',
+    format: 'wav',
+  },
+  ogg: {
+    extension: 'ogg',
+    mimeType: 'audio/ogg',
+    format: 'ogg',
+  },
+  mp4: {
+    extension: 'mp4|m4a',
+    mimeType: 'audio/mp4',
+    format: 'mp4',
+  },
+  webm: {
+    extension: 'webm',
+    mimeType: 'audio/webm',
+    format: 'webm',
+  },
+  flac: {
+    extension: 'flac',
+    mimeType: 'audio/flac',
+    format: 'flac',
+  },
+  flacx: {
+    extension: 'flac',
+    mimeType: 'audio/x-flac',
+    format: 'flac',
+  },
+  aac: {
+    extension: 'aac',
+    mimeType: 'audio/aac',
+    format: 'aac',
+  },
+} as const;
 
 /**
  * Supported Image Formats with Magic Bytes
@@ -81,35 +150,84 @@ export const MODEL_CAPABILITIES = {
 } as const;
 
 /**
+ * Universal Node Defaults
+ * Default values shared between image and audio modes
+ */
+export const UNIVERSAL_DEFAULTS = {
+  SYSTEM_PROMPT:
+    'You are a helpful AI assistant specialized in analyzing images and audio.\n\n' +
+    'Rules:\n' +
+    '- Use only information clearly visible in the image or audible in the audio\n' +
+    '- Never guess or assume information that cannot be visually or auditorily confirmed\n' +
+    "- If unable to answer fully, explain what's missing\n" +
+    '- Be concise, factual, and neutral by default\n\n' +
+    "Adapt your response to the user's request:\n" +
+    '- For images: describe, extract text, analyze, or answer questions about the image\n' +
+    '- For audio: transcribe speech exactly, summarize, translate, or answer questions about the audio\n' +
+    '- If the request cannot be fulfilled based on available content, state this explicitly',
+} as const;
+
+/**
  * Vision Node Defaults
  * Default values for vision analysis configuration
  */
 export const VISION_DEFAULTS = {
-	/**
-	 * Default system prompt for Vision Chain
-	 * Provides comprehensive guidelines for image analysis
-	 */
-	SYSTEM_PROMPT: 
-		'You are an AI assistant specialized in image understanding and visual analysis.\n\n' +
-		'Rules:\n' +
-		'- Use only information clearly visible in the image\n' +
-		'- Never guess or assume information that cannot be visually confirmed\n' +
-		'- If unable to answer fully, explain what\'s missing\n' +
-		'- Be concise, factual, and neutral by default\n\n' +
-		'Adapt your response to the user\'s request:\n' +
-		'- Text extraction → reproduce exactly as seen\n' +
-		'- Description → summarize visible elements\n' +
-		'- Unanswerable questions → state this explicitly',
+  /**
+   * Default system prompt for Vision Chain
+   * Provides comprehensive guidelines for image analysis
+   */
+  SYSTEM_PROMPT:
+    'You are an AI assistant specialized in image understanding and visual analysis.\n\n' +
+    'Rules:\n' +
+    '- Use only information clearly visible in the image\n' +
+    '- Never guess or assume information that cannot be visually confirmed\n' +
+    "- If unable to answer fully, explain what's missing\n" +
+    '- Be concise, factual, and neutral by default\n\n' +
+    "Adapt your response to the user's request:\n" +
+    '- Text extraction → reproduce exactly as seen\n' +
+    '- Description → summarize visible elements\n' +
+    '- Unanswerable questions → state this explicitly',
 
-	/**
-	 * Default output property name for analysis results
-	 */
-	OUTPUT_PROPERTY: 'analysis',
+  /**
+   * Default output property name for analysis results
+   */
+  OUTPUT_PROPERTY: 'analysis',
 
-	/**
-	 * Default prompt for image analysis
-	 */
-	ANALYSIS_PROMPT: 'Analyze this image and describe what you see',
+  /**
+   * Default prompt for image analysis
+   */
+  ANALYSIS_PROMPT: 'Analyze this image and describe what you see',
+} as const;
+
+/**
+ * Audio Node Defaults
+ * Default values for audio analysis configuration
+ */
+export const AUDIO_DEFAULTS = {
+  /**
+   * Default system prompt for audio analysis
+   * Focused on transcription with support for general audio analysis
+   */
+  SYSTEM_PROMPT:
+    'You are an AI assistant specialized in audio transcription and analysis.\n\n' +
+    'Rules:\n' +
+    '- Transcribe speech exactly as heard, including filler words (um, uh) if present\n' +
+    '- Preserve speaker identities if identifiable (e.g., "Speaker 1:", "Speaker 2:")\n' +
+    '- Use only information clearly present in the audio\n' +
+    '- Never guess or assume information that cannot be heard\n' +
+    "- If unable to understand or transcribe, clearly state what's missing or unclear\n" +
+    '- Be precise and verbatim for transcriptions\n' +
+    '- For non-transcription requests, summarize audible elements accurately\n\n' +
+    "Adapt your response to the user's request:\n" +
+    '- Transcription → reproduce speech exactly as heard\n' +
+    '- Translation → translate the transcribed content\n' +
+    '- Summary → provide a concise summary of key points\n' +
+    '- Questions → answer based only on audible content',
+
+  /**
+   * Default prompt for audio analysis (transcription-focused)
+   */
+  ANALYSIS_PROMPT: 'Transcribe this audio exactly as spoken',
 } as const;
 
 /**
@@ -117,44 +235,58 @@ export const VISION_DEFAULTS = {
  * Consolidated error messages used across both nodes
  */
 export const ERROR_MESSAGES = {
-	/**
-	 * Error when no chat model is connected (Vision Chain specific)
-	 */
-	NO_CHAT_MODEL: 'No chat model connected. Please connect a chat model to the Vision Chain node.',
+  /**
+   * Error when no chat model is connected (Vision Chain specific)
+   */
+  NO_CHAT_MODEL: 'No chat model connected. Please connect a chat model to the Vision Chain node.',
 
-	/**
-	 * Error when binary data property is not found
-	 * @param propertyName - The binary property name that was requested
-	 * @param availableProps - Comma-separated list of available binary properties
-	 * @returns Formatted error message with troubleshooting steps
-	 */
-	NO_BINARY_DATA: (propertyName: string, availableProps: string) => 
-		`No binary data found in property '${propertyName}'. ` +
-		`Available binary properties: [${availableProps || 'none'}]. ` +
-		`\n\nMake sure:` +
-		`\n1. Previous node outputs binary data` +
-		`\n2. Binary property name is correct (default: 'data')`,
+  /**
+   * Error when binary data property is not found
+   * @param propertyName - The binary property name that was requested
+   * @param availableProps - Comma-separated list of available binary properties
+   * @returns Formatted error message with troubleshooting steps
+   */
+  NO_BINARY_DATA: (propertyName: string, availableProps: string) =>
+    `No binary data found in property '${propertyName}'. ` +
+    `Available binary properties: [${availableProps || 'none'}]. ` +
+    `\n\nMake sure:` +
+    `\n1. Previous node outputs binary data` +
+    `\n2. Binary property name is correct (default: 'data')`,
 
-	/**
-	 * Error when image URL is invalid or unsafe
-	 */
-	INVALID_URL: 'Image URL must start with http:// or https://',
+  /**
+   * Error when image URL is invalid or unsafe
+   */
+  INVALID_URL: 'Image URL must start with http:// or https://',
 
-	/**
-	 * Error when URL contains potentially unsafe content
-	 */
-	UNSAFE_URL: 'Potentially unsafe URL detected (contains script or javascript)',
+  /**
+   * Error when URL contains potentially unsafe content
+   */
+  UNSAFE_URL: 'Potentially unsafe URL detected (contains script or javascript)',
 
-	/**
-	 * Error when binary data buffer is empty
-	 */
-	EMPTY_BINARY_DATA: 'Binary data buffer is empty. The image file appears to be empty.',
+  /**
+   * Error when binary data buffer is empty
+   */
+  EMPTY_BINARY_DATA: 'Binary data buffer is empty. The image file appears to be empty.',
 
-	/**
-	 * Error when binary data read fails
-	 * @param errorMessage - Original error message from the failure
-	 * @returns Formatted error message
-	 */
-	BINARY_READ_FAILED: (errorMessage: string) => 
-		`Failed to read binary data: ${errorMessage}. The binary data may be corrupted or inaccessible.`,
+  /**
+   * Error when binary data read fails
+   * @param errorMessage - Original error message from the failure
+   * @returns Formatted error message
+   */
+  BINARY_READ_FAILED: (errorMessage: string) =>
+    `Failed to read binary data: ${errorMessage}. The binary data may be corrupted or inaccessible.`,
+
+  /**
+   * Error when audio binary data buffer is empty
+   */
+  EMPTY_AUDIO_BINARY_DATA: 'Binary data buffer is empty. The audio file appears to be empty.',
+
+  /**
+   * Error when provider does not support audio input
+   * @param providerName - Name of the provider
+   * @returns Formatted error message
+   */
+  AUDIO_NOT_SUPPORTED: (providerName: string) =>
+    `${providerName} does not support audio input in the messages API. ` +
+    `Please use a provider that supports multimodal audio (e.g., OpenAI GPT-4o audio models, Google Gemini).`,
 };
