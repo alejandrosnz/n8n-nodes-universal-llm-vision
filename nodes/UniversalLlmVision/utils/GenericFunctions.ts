@@ -241,14 +241,16 @@ async function fetchWithRetry(
 }
 
 /**
- * Fetch all vision-capable models from models.dev API
+ * Fetch models from models.dev API filtered by input modality
  * @param httpRequest - HTTP request function
  * @param providerFilter - Optional provider ID to filter models from a specific provider
- * @returns Promise<ModelInfo[]> - Array of available vision-capable models
+ * @param modality - Input modality to filter by: 'image' (default) or 'audio'
+ * @returns Promise<ModelInfo[]> - Array of models supporting the requested input modality
  */
 export async function fetchAllVisionModels(
   httpRequest: (requestOptions: IHttpRequestOptions) => Promise<any>,
-  providerFilter?: string
+  providerFilter?: string,
+  modality: 'image' | 'audio' = 'image'
 ): Promise<ModelInfo[]> {
   try {
     const requestOptions: IHttpRequestOptions = {
@@ -290,9 +292,9 @@ export async function fetchAllVisionModels(
 
         const model = modelData as any;
 
-        // Check if model supports image input
+        // Check if model supports the requested input modality
         const inputModalities = model.modalities?.input || [];
-        if (inputModalities.includes('image')) {
+        if (inputModalities.includes(modality)) {
           visionModels.push({
             id: modelId,
             name: `${providerName}: ${model.name || modelId}`,

@@ -17,7 +17,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
     it('should successfully fetch and format models for OpenAI provider', async () => {
       // Mock models.dev API response
       const mockResponse = {
-        'openai': {
+        openai: {
           id: 'openai',
           name: 'OpenAI',
           models: {
@@ -45,6 +45,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
           provider: 'openai',
           apiKey: 'test-api-key',
         }),
+        getCurrentNodeParameter: jest.fn().mockReturnValue('analyzeImage'),
         helpers: {
           httpRequest: jest.fn().mockResolvedValue(mockResponse),
         } as any,
@@ -52,7 +53,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
 
       // Call getModels
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Verify results
@@ -73,7 +74,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
     it('should filter models by provider (Anthropic)', async () => {
       // Mock models.dev API response with multiple providers
       const mockResponse = {
-        'openai': {
+        openai: {
           id: 'openai',
           name: 'OpenAI',
           models: {
@@ -86,7 +87,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
             },
           },
         },
-        'anthropic': {
+        anthropic: {
           id: 'anthropic',
           name: 'Anthropic',
           models: {
@@ -112,7 +113,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should only return Anthropic models
@@ -135,7 +136,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return error message as option
@@ -157,7 +158,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return error message with timeout info
@@ -194,7 +195,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return "No models found" message
@@ -236,7 +237,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
         };
 
         const result = await node.methods?.loadOptions?.getModels?.call(
-          mockLoadOptionsFunctions as ILoadOptionsFunctions,
+          mockLoadOptionsFunctions as ILoadOptionsFunctions
         );
 
         // Should return models from custom provider
@@ -248,7 +249,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
             method: 'GET',
             url: expect.stringContaining('/models'),
             timeout: 10000,
-          }),
+          })
         );
       });
 
@@ -265,7 +266,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
         };
 
         const result = await node.methods?.loadOptions?.getModels?.call(
-          mockLoadOptionsFunctions as ILoadOptionsFunctions,
+          mockLoadOptionsFunctions as ILoadOptionsFunctions
         );
 
         // Should return error message with Manual Model ID instruction
@@ -289,7 +290,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
         };
 
         const result = await node.methods?.loadOptions?.getModels?.call(
-          mockLoadOptionsFunctions as ILoadOptionsFunctions,
+          mockLoadOptionsFunctions as ILoadOptionsFunctions
         );
 
         // Should return error or empty models message
@@ -311,7 +312,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return "No models found" for invalid response
@@ -322,7 +323,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
 
     it('should handle missing modalities field gracefully', async () => {
       const mockResponse = {
-        'openai': {
+        openai: {
           id: 'openai',
           name: 'OpenAI',
           models: {
@@ -354,7 +355,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should only return model with proper modalities
@@ -364,7 +365,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
 
     it('should retry on transient network failure and succeed on second attempt', async () => {
       const mockResponse = {
-        'openai': {
+        openai: {
           id: 'openai',
           name: 'OpenAI',
           models: {
@@ -400,7 +401,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should successfully return models after retry
@@ -424,7 +425,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return error message after all retries
@@ -448,7 +449,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return error message for rate limiting
@@ -466,7 +467,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Should return error message
@@ -477,7 +478,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
 
     it('should pass timeout configuration to httpRequest', async () => {
       const mockResponse = {
-        'openai': {
+        openai: {
           id: 'openai',
           name: 'OpenAI',
           models: {
@@ -505,7 +506,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Verify timeout was passed to httpRequest
@@ -516,7 +517,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
 
     it('should sort models by release date (newest first)', async () => {
       const mockResponse = {
-        'openai': {
+        openai: {
           id: 'openai',
           name: 'OpenAI',
           models: {
@@ -556,7 +557,7 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       };
 
       const result = await node.methods?.loadOptions?.getModels?.call(
-        mockLoadOptionsFunctions as ILoadOptionsFunctions,
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
       );
 
       // Verify models are sorted by date (newest first)
@@ -564,6 +565,107 @@ describe('UniversalLlmVision Node - LoadOptions', () => {
       expect(result?.[0].value).toBe('newer-model'); // 2024-12-01
       expect(result?.[1].value).toBe('new-model'); // 2024-10-01
       expect(result?.[2].value).toBe('old-model'); // 2023-01-01
+    });
+
+    it('should fetch audio-capable models when resource is analyzeAudio', async () => {
+      const mockResponse = {
+        openai: {
+          id: 'openai',
+          name: 'OpenAI',
+          models: {
+            'gpt-4o': {
+              id: 'gpt-4o',
+              name: 'GPT-4o',
+              release_date: '2024-05-13',
+              cost: { input: 2.5, output: 10 },
+              modalities: { input: ['text', 'image', 'audio'], output: ['text'] },
+            },
+            'gpt-4-turbo': {
+              id: 'gpt-4-turbo',
+              name: 'GPT-4 Turbo',
+              release_date: '2024-04-09',
+              cost: { input: 10, output: 30 },
+              modalities: { input: ['text', 'image'], output: ['text'] }, // no audio
+            },
+          },
+        },
+      };
+
+      const mockLoadOptionsFunctions: Partial<ILoadOptionsFunctions> = {
+        getCredentials: jest.fn().mockResolvedValue({
+          provider: 'openai',
+          apiKey: 'test-api-key',
+        }),
+        getCurrentNodeParameter: jest.fn().mockReturnValue('analyzeAudio'),
+        helpers: {
+          httpRequest: jest.fn().mockResolvedValue(mockResponse),
+        } as any,
+      };
+
+      const result = await node.methods?.loadOptions?.getModels?.call(
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
+      );
+
+      // Should only return models that support audio input
+      expect(result).toHaveLength(1);
+      expect(result?.[0].value).toBe('gpt-4o');
+      // gpt-4-turbo (image only) must NOT appear
+      expect(result?.find((m) => m.value === 'gpt-4-turbo')).toBeUndefined();
+    });
+
+    it('should fetch image-capable models when resource is analyzeImage', async () => {
+      const mockResponse = {
+        openai: {
+          id: 'openai',
+          name: 'OpenAI',
+          models: {
+            'gpt-4o': {
+              id: 'gpt-4o',
+              name: 'GPT-4o',
+              release_date: '2024-05-13',
+              cost: { input: 2.5, output: 10 },
+              modalities: { input: ['text', 'image', 'audio'], output: ['text'] },
+            },
+            'gpt-4-turbo': {
+              id: 'gpt-4-turbo',
+              name: 'GPT-4 Turbo',
+              release_date: '2024-04-09',
+              cost: { input: 10, output: 30 },
+              modalities: { input: ['text', 'image'], output: ['text'] },
+            },
+            'audio-only-model': {
+              id: 'audio-only-model',
+              name: 'Audio Only',
+              release_date: '2024-01-01',
+              cost: { input: 1, output: 2 },
+              modalities: { input: ['text', 'audio'], output: ['text'] }, // no image
+            },
+          },
+        },
+      };
+
+      const mockLoadOptionsFunctions: Partial<ILoadOptionsFunctions> = {
+        getCredentials: jest.fn().mockResolvedValue({
+          provider: 'openai',
+          apiKey: 'test-api-key',
+        }),
+        getCurrentNodeParameter: jest.fn().mockReturnValue('analyzeImage'),
+        helpers: {
+          httpRequest: jest.fn().mockResolvedValue(mockResponse),
+        } as any,
+      };
+
+      const result = await node.methods?.loadOptions?.getModels?.call(
+        mockLoadOptionsFunctions as ILoadOptionsFunctions
+      );
+
+      // Should return both models that support image input (gpt-4o and gpt-4-turbo)
+      expect(result).toHaveLength(2);
+      const values = result?.map((m) => m.value) ?? [];
+      expect(values).toContain('gpt-4o');
+      expect(values).toContain('gpt-4-turbo');
+      // audio-only-model must NOT appear
+      expect(values).not.toContain('audio-only-model');
     });
   });
 });

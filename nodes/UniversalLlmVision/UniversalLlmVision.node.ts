@@ -427,8 +427,12 @@ export class UniversalLlmVision implements INodeType {
           // Detect configured credentials to get the selected provider
           const credInfo = await detectCredentials((type: string) => this.getCredentials(type));
 
+          // Determine which modality to filter by based on the selected resource
+          const resource = this.getCurrentNodeParameter?.('resource') as string | undefined;
+          const modality: 'image' | 'audio' = resource === 'analyzeAudio' ? 'audio' : 'image';
+
           // Load models based on provider type (custom provider API or models.dev)
-          return loadModelsForDropdown(credInfo, this.helpers.httpRequest);
+          return loadModelsForDropdown(credInfo, this.helpers.httpRequest, modality);
         } catch (error) {
           // Return error message if credential detection or loading fails
           return [
