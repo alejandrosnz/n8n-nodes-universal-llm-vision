@@ -301,7 +301,27 @@ export class AudioProcessor {
         throw new Error(ERROR_MESSAGES.NO_BINARY_DATA(propName, available));
       }
 
-      return prepareAudio('binary', binProp, undefined, filename || undefined);
+      // Use getBinaryDataBuffer to handle both in-memory and filesystem binary storage modes.
+      // Directly reading binProp.data is unreliable in n8n's filesystem mode where data is empty.
+      let binaryDataBuffer: Buffer;
+      try {
+        binaryDataBuffer = await ef.helpers.getBinaryDataBuffer(itemIndex, propName);
+      } catch (error) {
+        throw new Error(
+          `Failed to read audio binary data: ${(error as Error).message}. ` +
+            `The binary data may be corrupted or inaccessible.`
+        );
+      }
+
+      if (!binaryDataBuffer || binaryDataBuffer.length === 0) {
+        throw new Error('Audio binary data buffer is empty. The audio file appears to be empty.');
+      }
+
+      // Convert the buffer to a clean base64 string and build a resolved metadata object
+      const base64Data = binaryDataBuffer.toString('base64');
+      const resolvedBinProp = { ...binProp, data: base64Data };
+
+      return prepareAudio('binary', resolvedBinProp, undefined, filename || undefined);
     }
 
     if (audioSource === 'base64') {
