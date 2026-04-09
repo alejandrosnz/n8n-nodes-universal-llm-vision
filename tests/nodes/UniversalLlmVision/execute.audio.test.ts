@@ -50,6 +50,9 @@ describe('UniversalLlmVision — analyzeAudio resource (execute)', () => {
     mockEf.getInputData.mockReturnValue([{ json: { id: 1 } }]);
     mockEf.getCredentials.mockResolvedValue(MOCK_CREDENTIALS.openai);
     mockEf.helpers.request.mockResolvedValue(MOCK_OPENAI_RESPONSE);
+
+    // Mock getBinaryDataBuffer to return base64-decoded buffer
+    mockEf.helpers.getBinaryDataBuffer.mockResolvedValue(Buffer.from(SMALL_AUDIO_BASE64, 'base64'));
   });
 
   afterEach(() => {

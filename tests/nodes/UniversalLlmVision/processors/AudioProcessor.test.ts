@@ -555,6 +555,9 @@ describe('AudioProcessor', () => {
     mockExecuteFunctions = {
       getNodeParameter: jest.fn(),
       getInputData: jest.fn(),
+      helpers: {
+        getBinaryDataBuffer: jest.fn(),
+      },
     };
   });
 
@@ -577,6 +580,11 @@ describe('AudioProcessor', () => {
         .mockReturnValueOnce('test.mp3'); // audioFilename
 
       mockExecuteFunctions.getInputData.mockReturnValue([{ binary: { data: mockBinaryData } }]);
+
+      // Mock getBinaryDataBuffer to return the base64-decoded buffer
+      mockExecuteFunctions.helpers.getBinaryDataBuffer.mockResolvedValue(
+        Buffer.from(SMALL_AUDIO_BASE64, 'base64')
+      );
 
       const processor = new AudioProcessor(mockExecuteFunctions);
       const result = await processor.getPreparedAudio(0);
