@@ -132,12 +132,15 @@ export async function prepareAudio(
       );
     }
 
+    // Strip whitespace (newlines, spaces) that n8n sometimes includes in binary base64 strings
+    const cleanedData = audioData.data.replace(/\s/g, '');
+
     // Validate base64 data and check size
-    if (!BASE64_REGEX.test(audioData.data)) {
+    if (!BASE64_REGEX.test(cleanedData)) {
       throw new Error('Invalid base64 format in binary data. The audio data may be corrupted.');
     }
 
-    const buffer = Buffer.from(audioData.data, 'base64');
+    const buffer = Buffer.from(cleanedData, 'base64');
 
     if (buffer.length === 0) {
       throw new Error(ERROR_MESSAGES.EMPTY_AUDIO_BINARY_DATA);
@@ -152,7 +155,7 @@ export async function prepareAudio(
     }
 
     return {
-      data: audioData.data,
+      data: cleanedData,
       mimeType: detectedMimeType,
       format,
       size: buffer.length,

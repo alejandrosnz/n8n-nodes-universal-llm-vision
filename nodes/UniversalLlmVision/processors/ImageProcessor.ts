@@ -1,5 +1,10 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
-import { IMAGE_SIZE_LIMIT_BYTES, BASE64_REGEX, SUPPORTED_IMAGE_FORMATS, ERROR_MESSAGES } from '../constants/config';
+import {
+  IMAGE_SIZE_LIMIT_BYTES,
+  BASE64_REGEX,
+  SUPPORTED_IMAGE_FORMATS,
+  ERROR_MESSAGES,
+} from '../constants/config';
 import { getImageFromSource } from '../utils/ImageSourceHelpers';
 
 /**
@@ -85,7 +90,7 @@ export function detectMimeTypeFromBase64(base64Data: string): string | null {
  * @returns boolean - True if supported
  */
 export function isSupportedMimeType(mimeType: string): boolean {
-  return Object.values(SUPPORTED_MIME_TYPES).some(config => config.mimeType === mimeType);
+  return Object.values(SUPPORTED_MIME_TYPES).some((config) => config.mimeType === mimeType);
 }
 
 /**
@@ -93,7 +98,7 @@ export function isSupportedMimeType(mimeType: string): boolean {
  * @returns string[] - Array of supported MIME types
  */
 export function getSupportedMimeTypes(): string[] {
-  return Object.values(SUPPORTED_MIME_TYPES).map(config => config.mimeType);
+  return Object.values(SUPPORTED_MIME_TYPES).map((config) => config.mimeType);
 }
 
 /**
@@ -121,13 +126,15 @@ export function isValidBase64(data: string): boolean {
 export async function prepareImage(
   source: 'binary' | 'base64' | 'url',
   imageData: any,
-  filename?: string,
+  filename?: string
 ): Promise<PreparedImage> {
   const maxSize = IMAGE_SIZE_LIMIT_BYTES;
 
   if (source === 'binary') {
     if (!imageData) {
-      throw new Error('Binary data is undefined or null. Make sure the previous node is outputting binary data.');
+      throw new Error(
+        'Binary data is undefined or null. Make sure the previous node is outputting binary data.'
+      );
     }
 
     const availableProps = Object.keys(imageData).join(', ');
@@ -135,16 +142,16 @@ export async function prepareImage(
     if (!('data' in imageData) || typeof imageData.data !== 'string') {
       throw new Error(
         `Binary data object is missing 'data' property or it's not a string. ` +
-        `Available properties: [${availableProps}]. ` +
-        `This usually means the binary property name is incorrect or the previous node didn't output binary data.`
+          `Available properties: [${availableProps}]. ` +
+          `This usually means the binary property name is incorrect or the previous node didn't output binary data.`
       );
     }
 
     if (!imageData.mimeType) {
       throw new Error(
         `Binary data object is missing 'mimeType' property. ` +
-        `Available properties: [${availableProps}]. ` +
-        `The previous node may not be setting the MIME type correctly.`
+          `Available properties: [${availableProps}]. ` +
+          `The previous node may not be setting the MIME type correctly.`
       );
     }
 
@@ -168,25 +175,27 @@ export async function prepareImage(
     if (!isSupportedMimeType(detectedMimeType)) {
       throw new Error(
         `Unsupported image format: ${detectedMimeType}. ` +
-        `Supported formats: ${getSupportedMimeTypes().join(', ')}. ` +
-        `If the MIME type is incorrect, try providing a filename with the correct extension.`
+          `Supported formats: ${getSupportedMimeTypes().join(', ')}. ` +
+          `If the MIME type is incorrect, try providing a filename with the correct extension.`
       );
     }
 
     // Verify base64 decoding and get size
+    // Strip whitespace (newlines, spaces) that n8n sometimes includes in binary base64 strings
+    const cleanedData = imageData.data.replace(/\s/g, '');
     let buffer: Buffer;
     try {
       // First validate that it's valid base64
-      if (!BASE64_REGEX.test(imageData.data)) {
+      if (!BASE64_REGEX.test(cleanedData)) {
         throw new Error('Invalid base64 format');
       }
 
-      buffer = Buffer.from(imageData.data, 'base64');
+      buffer = Buffer.from(cleanedData, 'base64');
     } catch (error) {
       throw new Error(
         `Failed to decode binary data as base64. ` +
-        `The 'data' field may be corrupted or in an unexpected format. ` +
-        `Error: ${(error as Error).message}`
+          `The 'data' field may be corrupted or in an unexpected format. ` +
+          `Error: ${(error as Error).message}`
       );
     }
 
@@ -200,24 +209,24 @@ export async function prepareImage(
     if (buffer.length > maxSize) {
       throw new Error(
         `Image size exceeds maximum of ${IMAGE_SIZE_LIMIT_BYTES / 1024 / 1024}MB ` +
-        `(got ${(buffer.length / 1024 / 1024).toFixed(2)}MB). ` +
-        `Try compressing the image or using a smaller resolution.`
+          `(got ${(buffer.length / 1024 / 1024).toFixed(2)}MB). ` +
+          `Try compressing the image or using a smaller resolution.`
       );
     }
 
     // Verify magic bytes to confirm image type
-    const detectedFromMagicBytes = detectMimeTypeFromBase64(imageData.data);
+    const detectedFromMagicBytes = detectMimeTypeFromBase64(cleanedData);
     if (detectedFromMagicBytes && detectedFromMagicBytes !== detectedMimeType) {
       console.warn(
         `Warning: MIME type mismatch. ` +
-        `Metadata says ${detectedMimeType} but magic bytes indicate ${detectedFromMagicBytes}. ` +
-        `Using magic bytes detection.`
+          `Metadata says ${detectedMimeType} but magic bytes indicate ${detectedFromMagicBytes}. ` +
+          `Using magic bytes detection.`
       );
       detectedMimeType = detectedFromMagicBytes;
     }
 
     return {
-      data: imageData.data,
+      data: cleanedData,
       mimeType: detectedMimeType,
       size: buffer.length,
       source: 'binary',
@@ -262,8 +271,8 @@ export async function prepareImage(
     if (!mimeType) {
       throw new Error(
         'Could not detect image format from the data. ' +
-        'Please provide a filename with extension or ensure the image data is valid. ' +
-        `Supported formats: ${getSupportedMimeTypes().join(', ')}`
+          'Please provide a filename with extension or ensure the image data is valid. ' +
+          `Supported formats: ${getSupportedMimeTypes().join(', ')}`
       );
     }
 
@@ -296,18 +305,24 @@ export async function prepareImage(
     } catch (error) {
       throw new Error(
         `Invalid image URL: "${imageData}". ` +
-        `Make sure it's a valid HTTP(S) URL. Error: ${(error as Error).message}`
+          `Make sure it's a valid HTTP(S) URL. Error: ${(error as Error).message}`
       );
     }
 
     // Basic security checks
     const sanitizedUrl = imageData.trim();
-    if (sanitizedUrl.toLowerCase().includes('<script') || sanitizedUrl.toLowerCase().includes('javascript:')) {
+    if (
+      sanitizedUrl.toLowerCase().includes('<script') ||
+      sanitizedUrl.toLowerCase().includes('javascript:')
+    ) {
       throw new Error(ERROR_MESSAGES.UNSAFE_URL);
     }
 
     // Check protocol (only allow http and https)
-    if (!sanitizedUrl.toLowerCase().startsWith('http://') && !sanitizedUrl.toLowerCase().startsWith('https://')) {
+    if (
+      !sanitizedUrl.toLowerCase().startsWith('http://') &&
+      !sanitizedUrl.toLowerCase().startsWith('https://')
+    ) {
       throw new Error(ERROR_MESSAGES.INVALID_URL);
     }
 
@@ -327,7 +342,7 @@ export async function prepareImage(
  * @returns Array of MIME type options for UI dropdown
  */
 export function getMimeTypeOptions() {
-  return Object.values(SUPPORTED_MIME_TYPES).map(config => ({
+  return Object.values(SUPPORTED_MIME_TYPES).map((config) => ({
     name: config.mimeType,
     value: config.mimeType,
   }));
