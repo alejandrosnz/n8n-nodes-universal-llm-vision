@@ -70,9 +70,8 @@
     "typescript": "5.9.2"
   },
   "peerDependencies": {
-    "n8n-workflow": "*"
+    "n8n-workflow": "*",
+    "@langchain/core": ">=0.2.0"
   },
-  "dependencies": {
-    "@langchain/core": "^1.1.17"
-  }
+  "dependencies": {}
 }
